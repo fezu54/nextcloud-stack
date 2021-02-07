@@ -23,6 +23,7 @@ services:
       - nextcloud:/var/www/html
       - ./app/upload_max_filesize.ini:/usr/local/etc/php/conf.d/upload-max-filesize.ini
       - ./app/memory-limit.ini:/usr/local/etc/php/conf.d/memory-limit.ini
+      - /opt/pico/themes/story/story:/var/www/html/data/appdata_ocjn3g243xau/cms_pico/themes/story
     environment:
       - VIRTUAL_HOST=${DNS_ADDRESS}
       - LETSENCRYPT_HOST=${DNS_ADDRESS}
