@@ -17,6 +17,7 @@ MYSQL_DATABASE=nextcloud
 ```
 4. Start or update stack with 
 ```
+docker-compse build --pull
 docker-compose up -d
 ```
 
