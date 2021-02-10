@@ -15,7 +15,10 @@ MYSQL_PASSWORD={YOUR_SECRET_USER_PASSWORD}
 MYSQL_USER={YOUR_SQL_USER_NAME}
 MYSQL_DATABASE=nextcloud
 ```
-4. Start stack with `docker-compose up -d`
+4. Start or update stack with 
+```
+docker-compose up -d
+```
 
 # pico cms
 The docker-compose file mounts pico cms theme into the the app container. If you don't use it, simply remove it from the `app` declaration in the docker-compose file.
