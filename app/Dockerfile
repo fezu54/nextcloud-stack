@@ -10,6 +10,9 @@ RUN set -ex; \
         smbclient \
         supervisor \
         libreoffice \
+        ocrmypdf \
+        tesseract-ocr-eng \
+        tesseract-ocr-deu \
     ; \
     rm -rf /var/lib/apt/lists/*
 
