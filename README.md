@@ -38,7 +38,7 @@ The stack will automatically back up your running nextlcoud instance with the he
 ## Nextcloud maintenance mode
 This stack is not setting Nextcloud to [maintenance mode](https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html#maintenance-mode). If you want to enusre that no data is modified while backups are taken, you can set Nextcloud to maintenance mode via crontab before the backups are taken and release it once the backups are done.
 ## Restore backups
-1. Run an interactive shell: `docker-compose -f docker-compose.yml -f docker-compose.restore.yml run borgmatic_backup`
+1. Run an interactive shell: `docker-compose -f docker-compose.yml -f docker-compose.restore.yml run nextcloud_borgmatic_backup_1`
 2. Fuse-mount the backup: `borg mount /mnt/borg-repository <mount_point>`
 3. Restore your files:
 * Extract volume data: https://torsion.org/borgmatic/docs/how-to/extract-a-backup/
