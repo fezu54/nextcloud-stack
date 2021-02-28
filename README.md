@@ -40,3 +40,13 @@ The stack will automatically back up your running nextlcoud instance with the he
 ⚠️ It's important to save your borg repo key and the borgmatic passphrase somewhere secure. You'll need it to restore the backups.
 ## Nextcloud maintenance mode
 This stack is not setting Nextcloud to [maintenance mode](https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html#maintenance-mode). If you want to enusre that no data is modified while backups are taken, you can set Nextcloud to maintenance mode via crontab before the backups are taken and release it once the backups are done.
+## restore backups
+1. Run an interactive shell: docker-compose -f docker-compose.yml -f docker-compose.restore.yml run borgmatic_backuo
+2. Fuse-mount the backup: borg mount /mnt/borg-repository <mount_point>
+3. Restore your files:
+* Extract volume data: https://torsion.org/borgmatic/docs/how-to/extract-a-backup/
+* Restore database: https://torsion.org/borgmatic/docs/how-to/backup-your-databases/#database-restoration
+* General information about Nextcloud restore: https://docs.nextcloud.com/server/latest/admin_manual/maintenance/restore.html
+5. Finally unmount and exit: borg umount <mount_point> && exit.
+
+In case Borg fails to create/acquire a lock: borg break-lock /mnt/repository
