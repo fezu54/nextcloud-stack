@@ -31,22 +31,22 @@ docker exec nextcloud_borgmatic_backup_1 sh -c "borgmatic --init --encryption re
 ```bash
 docker exec nextcloud_borgmatic_backup_1 sh -c "borg key export /mnt/borg-repository /mnt/borg-repository/key-export.txt"
 ```
-# pico cms
-The docker-compose file mounts pico cms theme into the the app container. If you don't use it, simply remove it from the `app` declaration in the docker-compose file.
-
-# backups
+# Backups
 The stack will automatically back up your running nextlcoud instance with the help of [borg](https://borgbackup.readthedocs.io/en/stable/index.html)/[borgmatic](https://torsion.org/borgmatic/). Per default, it will create a new backup every day at 1am. If you want to change this, adapt the [crontab.txt](https://github.com/fezu54/nextcloud-stack/blob/main/backup/borgmatic.d/crontab.txt) in this repository.
 
 ⚠️ It's important to save your borg repo key and the borgmatic passphrase somewhere secure. You'll need it to restore the backups.
 ## Nextcloud maintenance mode
 This stack is not setting Nextcloud to [maintenance mode](https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html#maintenance-mode). If you want to enusre that no data is modified while backups are taken, you can set Nextcloud to maintenance mode via crontab before the backups are taken and release it once the backups are done.
-## restore backups
-1. Run an interactive shell: docker-compose -f docker-compose.yml -f docker-compose.restore.yml run borgmatic_backuo
-2. Fuse-mount the backup: borg mount /mnt/borg-repository <mount_point>
+## Restore backups
+1. Run an interactive shell: `docker-compose -f docker-compose.yml -f docker-compose.restore.yml run borgmatic_backup`
+2. Fuse-mount the backup: `borg mount /mnt/borg-repository <mount_point>`
 3. Restore your files:
 * Extract volume data: https://torsion.org/borgmatic/docs/how-to/extract-a-backup/
 * Restore database: https://torsion.org/borgmatic/docs/how-to/backup-your-databases/#database-restoration
 * General information about Nextcloud restore: https://docs.nextcloud.com/server/latest/admin_manual/maintenance/restore.html
-5. Finally unmount and exit: borg umount <mount_point> && exit.
+5. Finally unmount and exit: `borg umount <mount_point> && exit.`
 
-In case Borg fails to create/acquire a lock: borg break-lock /mnt/repository
+In case Borg fails to create/acquire a lock: `borg break-lock /mnt/repository`
+
+# pico cms
+The docker-compose file mounts pico cms theme into the the app container. If you don't use it, simply remove it from the `app` declaration in the docker-compose file.
