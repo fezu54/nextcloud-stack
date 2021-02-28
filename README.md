@@ -27,8 +27,16 @@ docker-compose up -d
 ```bash
 docker exec nextcloud_borgmatic_backup_1 sh -c "borgmatic --init --encryption repokey-blake2"
 ```
+6. Export borg repo key (to your backup folder)
+```bash
+docker exec nextcloud_borgmatic_backup_1 sh -c "borg key export /mnt/borg-repository /mnt/borg-repository/key-export.txt"
+```
 # pico cms
 The docker-compose file mounts pico cms theme into the the app container. If you don't use it, simply remove it from the `app` declaration in the docker-compose file.
 
 # backups
 The stack will automatically back up your running nextlcoud instance with the help of [borg](https://borgbackup.readthedocs.io/en/stable/index.html)/[borgmatic](https://torsion.org/borgmatic/). Per default, it will create a new backup every day at 1am. If you want to change this, adapt the [crontab.txt](https://github.com/fezu54/nextcloud-stack/blob/main/backup/borgmatic.d/crontab.txt) in this repository.
+
+It's important to save your borg repo key and the borgmatic passphrase somewhere secure. You'll need it to restore the backups.
+## Nextcloud maintenance mode
+This stack is not setting Nextcloud to [maintenance mode](https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html#maintenance-mode). If you want to enusre that no data is modified while backups are taken, you can set Nextcloud to maintenance mode via crontab before the backups are taken and release it once the backups are done.
