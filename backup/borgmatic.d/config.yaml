@@ -32,10 +32,9 @@ hooks:
     on_error:
         - echo "Error while creating a backup."
     mysql_databases:
-        - name: ${MYSQL_DATABASE}
+        - name: all
           hostname: db
-          port: 3307
+          port: 3306
           username: root
-          password: ${MYSQL_ROOT_PASSWORD}
-          options: "--single-transaction"
+          #options: "--single-transaction"
 
