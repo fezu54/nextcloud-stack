@@ -48,5 +48,3 @@ This stack is not setting Nextcloud to [maintenance mode](https://docs.nextcloud
 
 In case Borg fails to create/acquire a lock: `borg break-lock /mnt/repository`
 
-# pico cms
-The docker-compose file mounts pico cms theme into the the app container. If you don't use it, simply remove it from the `app` declaration in the docker-compose file.
