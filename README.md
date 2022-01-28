@@ -5,7 +5,7 @@ This is my personal docker-compose stack to deploy Nextcloud on a self hosted ma
 2. Create a .env file with following content:
 ```bash
 COMPOSE_PROJECT_NAME=nextcloud
-MYSQL_ROOT_PASSWOR={YOUR_SECRET_ROOT_PASSWORD}
+MYSQL_ROOT_PASSWORD={YOUR_SECRET_ROOT_PASSWORD}
 DNS_ADDRESS={YOUR_DNS_ADDRESS}
 LETSENCRYPT_EMAIL={YOUR_EMAIL_ADDRESS}
 TZ={YOUR_TIMEZONE}  # cat /etc/timezone
@@ -20,7 +20,7 @@ MYSQL_DATABASE=nextcloud
 ```
 4. Start or update stack with 
 ```
-docker-compse build --pull
+docker-compose build --pull
 docker-compose up -d
 ```
 5. Initialize the borg repository
