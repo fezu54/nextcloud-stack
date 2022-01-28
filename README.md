@@ -6,8 +6,8 @@ This is my personal docker-compose stack to deploy Nextcloud on a self hosted ma
 ```bash
 COMPOSE_PROJECT_NAME=nextcloud
 MYSQL_ROOT_PASSWORD={YOUR_SECRET_ROOT_PASSWORD}
-DNS_ADDRESS={YOUR_DNS_ADDRESS}
-LETSENCRYPT_EMAIL={YOUR_EMAIL_ADDRESS}
+DNS_ADDRESS={YOUR_DNS_ADDRESS} # FQDN format
+LETSENCRYPT_EMAIL={YOUR_EMAIL_ADDRESS} # Leave this out if you're using a proxy manager, and use docker-compose-without-letsencrypt.yml instead
 TZ={YOUR_TIMEZONE}  # cat /etc/timezone
 BORG_PASSPHRASE={YOUR_SECURE_BORG_PASSWORD} # encrypts your backups, useful to upload the archive to services like AWS Glacier
 VOLUME_TARGET={PATH_TO_YOUR_BACKUP_FOLDER}
@@ -18,16 +18,20 @@ MYSQL_PASSWORD={YOUR_SECRET_USER_PASSWORD}
 MYSQL_USER={YOUR_SQL_USER_NAME}
 MYSQL_DATABASE=nextcloud
 ```
-4. Start or update stack with 
+4. If you're using your own proxy or letsencrypt:
+```bash
+mv docker-compose-without-letsencrypt.yml docker-compose.yml
+```
+5. Start or update stack with 
 ```
 docker-compose build --pull
 docker-compose up -d
 ```
-5. Initialize the borg repository
+6. Initialize the borg repository
 ```bash
 docker exec nextcloud_borgmatic_backup_1 sh -c "borgmatic --init --encryption repokey-blake2"
 ```
-6. Export borg repo key (to your backup folder)
+7. Export borg repo key (to your backup folder)
 ```bash
 docker exec nextcloud_borgmatic_backup_1 sh -c "borg key export /mnt/borg-repository /mnt/borg-repository/key-export.txt"
 ```
