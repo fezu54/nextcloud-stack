@@ -1,5 +1,7 @@
 # nextcloud-stack
 This is my personal docker-compose stack to deploy Nextcloud on a self hosted machine. It includes https://github.com/b3vis/docker-borgmatic to create hot backups of the nextcloud volume (config, data, themes) and dumps of the running MariaDB.
+
+In addition it sends encrypted messages to your Smartphone via [Simplepush](https://simplepush.io/) in case of a backup failed.
 # Usage
 1. Clone this repository
 2. Create a .env file with following content:
@@ -11,6 +13,9 @@ LETSENCRYPT_EMAIL={YOUR_EMAIL_ADDRESS}
 TZ={YOUR_TIMEZONE}  # cat /etc/timezone
 BORG_PASSPHRASE={YOUR_SECURE_BORG_PASSWORD} # encrypts your backups, useful to upload the archive to services like AWS Glacier
 VOLUME_TARGET={PATH_TO_YOUR_BACKUP_FOLDER}
+SIMPLEPUSH_KEY={YOUR_UNIQUE_KEY}
+SIMPLEPUSH_PASSWORD={YOUR_SIMPLEPUSH_PASSWORD} # if not set messages are not encrypted
+SIMPLEPUSH_SALT={YOUR_SIMPLEPUSH_SALT}
 ```
 3. Create a db.env file with following content:
 ```bash
@@ -38,7 +43,7 @@ The stack will automatically back up your running nextlcoud instance with the he
 ## Nextcloud maintenance mode
 This stack is not setting Nextcloud to [maintenance mode](https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html#maintenance-mode). If you want to enusre that no data is modified while backups are taken, you can set Nextcloud to maintenance mode via crontab before the backups are taken and release it once the backups are done.
 ## Restore backups
-1. Run an interactive shell: `docker-compose -f docker-compose.yml -f docker-compose.restore.yml run nextcloud_borgmatic_backup_1`
+1. Run an interactive shell: `docker-compose -f docker-compose.yml -f docker-compose.restore.yml run borgmatic_backup_1`
 2. Fuse-mount the backup: `borg mount /mnt/borg-repository <mount_point>`
 3. Restore your files:
 * Extract volume data: https://torsion.org/borgmatic/docs/how-to/extract-a-backup/
