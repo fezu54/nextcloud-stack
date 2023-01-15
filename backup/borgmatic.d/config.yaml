@@ -29,8 +29,10 @@ hooks:
         - echo "Starting a backup job."
     after_backup:
         - echo "Backup created."
+        - simplepush.sh -t "Backup created" -m "Creation of backup successful"
     on_error:
         - echo "Error while creating a backup."
+        - simplepush.sh -t "Error creating backup" -m "Creation of backup failed. Check borgmatic logs."
     mysql_databases:
         - name: all
           hostname: db

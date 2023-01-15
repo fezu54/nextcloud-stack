@@ -44,7 +44,7 @@ services:
       - backups
 
   borgmatic_backup:
-    image: b3vis/borgmatic:1.7.5
+    build: ./backup
     volumes:
       - nextcloud:/mnt/source:ro
       - ${VOLUME_TARGET}:/mnt/borg-repository
@@ -57,6 +57,9 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - NEXTCLOUD_DATABASE=nextcloud
       - MYSQL_PWD=${MYSQL_ROOT_PASSWORD}
+      - SIMPLEPUSH_KEY
+      - SIMPLEPUSH_PASSWORD
+      - SIMPLEPUSH_SALT
     restart: always
     networks:
       - backups
