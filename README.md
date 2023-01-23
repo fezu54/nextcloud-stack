@@ -1,6 +1,9 @@
 # nextcloud-stack
 This is my personal docker-compose stack to deploy Nextcloud on a self hosted machine. It includes https://github.com/b3vis/docker-borgmatic to create hot backups of the nextcloud volume (config, data, themes) and dumps of the running MariaDB.
 
+## rclone configuration
+[Rclone](https://rclone.org/) is used to automatically upload your local backups to a cloud provider. It can be configured via environment variables: https://rclone.org/docs/#environment-variables. The exact configuration depends on your cloud provider.
+
 In addition it sends encrypted messages to your Smartphone via [Simplepush](https://simplepush.io/) in case of a backup failed.
 # Usage
 1. Clone this repository
@@ -16,6 +19,14 @@ VOLUME_TARGET={PATH_TO_YOUR_BACKUP_FOLDER}
 SIMPLEPUSH_KEY={YOUR_UNIQUE_KEY}
 SIMPLEPUSH_PASSWORD={YOUR_SIMPLEPUSH_PASSWORD} # if not set messages are not encrypted
 SIMPLEPUSH_SALT={YOUR_SIMPLEPUSH_SALT}
+
+# Check https://rclone.org/docs/#configure or your cloud provider documentation
+RCLONE_CONFIG_NEXTCLOUD_TYPE=
+RCLONE_CONFIG_NEXTCLOUD_PROVIDER=
+RCLONE_CONFIG_NEXTCLOUD_ACL=
+RCLONE_CONFIG_NEXTCLOUD_ACCESS_KEY_ID=
+RCLONE_CONFIG_NEXTCLOUD_SECRET_ACCESS_KEY=
+RCLONE_CONFIG_NEXTCLOUD_ENDPOINT=
 ```
 3. Create a db.env file with following content:
 ```bash
@@ -25,7 +36,7 @@ MYSQL_DATABASE=nextcloud
 ```
 4. Start or update stack with 
 ```
-docker-compse build --pull
+docker-compose build --pull
 docker-compose up -d
 ```
 5. Initialize the borg repository

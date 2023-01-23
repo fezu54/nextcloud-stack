@@ -26,10 +26,13 @@ consistency:
 
 hooks:
     before_backup:
-        - echo "Starting a backup job."
+        - echo "Starting a backup job..."
     after_backup:
-        - echo "Backup created."
-        - simplepush.sh -t "Backup created" -m "Creation of backup successful"
+        - echo "Backup created..." 
+    after_actions:
+        - echo "Uploading backup..."
+        - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -v
+        - simplepush.sh -t "Backup done" -m "Creation and uploading of backup successful"
     on_error:
         - echo "Error while creating a backup."
         - simplepush.sh -t "Error creating backup" -m "Creation of backup failed. Check borgmatic logs."
