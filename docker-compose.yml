@@ -2,7 +2,7 @@ version: '3'
 
 services:
   db:
-    image: mariadb:10.5
+    image: mariadb:10.6
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     restart: always
     volumes:
@@ -49,7 +49,7 @@ services:
     build:
       context: ./backup
       args:
-        BORGMATIC_VERSION: 1.7.5
+        BORGMATIC_VERSION: 1.7.11
         RCLONE_VERSION: v1.61.1
     volumes:
       - nextcloud:/mnt/source:ro
