@@ -49,7 +49,7 @@ services:
     build:
       context: ./backup
       args:
-        BORGMATIC_VERSION: 1.7.11
+        BORGMATIC_VERSION: 1.7.12
         RCLONE_VERSION: v1.61.1
     volumes:
       - nextcloud:/mnt/source:ro
