@@ -31,7 +31,7 @@ RUN wget -c -q https://github.com/matiasdelellis/pdlib/archive/$PDLIB_BRANCH.zip
 # Enable PDlib on builder
 
 # If necesary take the php settings folder uncommenting the next line
-RUN php -i | grep "Scan this dir for additional .ini files"
+# RUN php -i | grep "Scan this dir for additional .ini files"
 RUN echo "extension=pdlib.so" > /usr/local/etc/php/conf.d/pdlib.ini
 
 RUN echo $(ls -a /usr/local/lib/php/extensions/)
@@ -53,8 +53,8 @@ RUN apt-get update ; \
 COPY --from=builder /usr/local/lib/libdlib.so* /usr/local/lib
 
 # If is necesary take the php extention folder (/usr/local/lib/php/extensions/no-debug-non-zts-20180731) uncommenting the next line
-RUN php -i | grep extension_dir
-COPY --from=builder /usr/local/lib/php/extensions/no-debug-non-zts-20210902/pdlib.so /usr/local/lib/php/extensions/no-debug-non-zts-20180731/
+# RUN php -i | grep extension_dir
+COPY --from=builder /usr/local/lib/php/extensions/no-debug-non-zts-20210902/pdlib.so /usr/local/lib/php/extensions/no-debug-non-zts-20210902/
 
 # Enable PDlib on final image
 RUN echo "extension=pdlib.so" > /usr/local/etc/php/conf.d/pdlib.ini
