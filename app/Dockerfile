@@ -5,7 +5,7 @@ FROM nextcloud:apache as builder
 RUN apt-get update ; \
     apt-get install -y build-essential wget cmake libx11-dev libopenblas-dev
 
-ARG DLIB_BRANCH=v19.19
+ARG DLIB_BRANCH=v19.24
 RUN wget -c -q https://github.com/davisking/dlib/archive/$DLIB_BRANCH.tar.gz \
     && tar xf $DLIB_BRANCH.tar.gz \
     && mv dlib-* dlib \
@@ -31,8 +31,10 @@ RUN wget -c -q https://github.com/matiasdelellis/pdlib/archive/$PDLIB_BRANCH.zip
 # Enable PDlib on builder
 
 # If necesary take the php settings folder uncommenting the next line
-# RUN php -i | grep "Scan this dir for additional .ini files"
+RUN php -i | grep "Scan this dir for additional .ini files"
 RUN echo "extension=pdlib.so" > /usr/local/etc/php/conf.d/pdlib.ini
+
+RUN echo $(ls -a /usr/local/lib/php/extensions/)
 
 # Install bzip2 needed to extract models
 
@@ -51,14 +53,11 @@ RUN apt-get update ; \
 COPY --from=builder /usr/local/lib/libdlib.so* /usr/local/lib
 
 # If is necesary take the php extention folder (/usr/local/lib/php/extensions/no-debug-non-zts-20180731) uncommenting the next line
-# RUN php -i | grep extension_dir
-COPY --from=builder /usr/local/lib/php/extensions/no-debug-non-zts-20180731/pdlib.so /usr/local/lib/php/extensions/no-debug-non-zts-20180731/
+RUN php -i | grep extension_dir
+COPY --from=builder /usr/local/lib/php/extensions/no-debug-non-zts-20210902/pdlib.so /usr/local/lib/php/extensions/no-debug-non-zts-20180731/
 
 # Enable PDlib on final image
 RUN echo "extension=pdlib.so" > /usr/local/etc/php/conf.d/pdlib.ini
-
-# Increse memory limits
-RUN echo memory_limit=1024M > /usr/local/etc/php/conf.d/memory-limit.ini
 
 # Proceed with other Nextcloud stuff
 RUN set -ex; \
