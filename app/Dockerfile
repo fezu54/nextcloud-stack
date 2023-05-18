@@ -120,5 +120,6 @@ RUN mkdir -p \
 COPY supervisord.conf /
 
 ENV NEXTCLOUD_UPDATE=1
+ENV PHP_MEMORY_LIMIT 32G
 
 CMD ["/usr/bin/supervisord", "-c", "/supervisord.conf"]
