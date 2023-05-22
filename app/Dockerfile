@@ -36,17 +36,19 @@ RUN echo "extension=pdlib.so" > /usr/local/etc/php/conf.d/pdlib.ini
 
 RUN echo $(ls -a /usr/local/lib/php/extensions/)
 
-# Install bzip2 needed to extract models
-
-RUN apt-get install -y libbz2-dev
-RUN docker-php-ext-install bz2
+######################################################################################
+######################################################################################
 
 FROM nextcloud:apache
 
 # Install dependencies to image
 
 RUN apt-get update ; \
-    apt-get install -y libopenblas-base
+    apt-get install -y libopenblas-base libbz2-dev
+
+# Install bzip2 needed to extract models
+
+RUN docker-php-ext-install bz2
 
 # Install dlib and PDlib to image
 
