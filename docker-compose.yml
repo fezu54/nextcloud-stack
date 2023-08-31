@@ -35,6 +35,7 @@ services:
       - REDIS_HOST=redis
     env_file:
       - db.env
+      - php.env
     depends_on:
       - db
       - redis

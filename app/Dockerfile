@@ -1,65 +1,36 @@
+FROM nextcloud:27.0.2-apache 
 # Dependencies for facerecognition app
-FROM nextcloud:apache as builder
+ARG BUILD_DEPS="gnupg2 wget unzip libx11-dev libbz2-dev cmake"
 
-# Build and install dlib on builder
+# Build and install dlib
 RUN apt-get update ; \
-    apt-get install -y build-essential wget cmake libx11-dev libopenblas-dev
+    apt-get install -y $BUILD_DEPS
 
-ARG DLIB_BRANCH=v19.24
-RUN wget -c -q https://github.com/davisking/dlib/archive/$DLIB_BRANCH.tar.gz \
-    && tar xf $DLIB_BRANCH.tar.gz \
-    && mv dlib-* dlib \
-    && cd dlib/dlib \
-    && mkdir build \
-    && cd build \
-    && cmake -DBUILD_SHARED_LIBS=ON --config Release .. \
-    && make \
-    && make install
+ARG DLIB_BRANCH=v19.24.2
+RUN wget -c -q https://github.com/davisking/dlib/archive/refs/tags/$DLIB_BRANCH.tar.gz \
+&& tar xf $DLIB_BRANCH.tar.gz \
+&& mv dlib-* dlib \
+&& cd dlib/dlib \
+&& mkdir build \
+&& cd build \
+&& cmake -DBUILD_SHARED_LIBS=ON .. -D CMAKE_BUILD_TYPE=Release \
+&& make \
+&& make install \
+&& cd ../../.. \
+&& rm -r dlib \
+&& rm $DLIB_BRANCH.tar.gz
 
 # Build and install PDLib on builder
 ARG PDLIB_BRANCH=master
-RUN apt-get install unzip
-RUN wget -c -q https://github.com/matiasdelellis/pdlib/archive/$PDLIB_BRANCH.zip \
-    && unzip $PDLIB_BRANCH \
-    && mv pdlib-* pdlib \
-    && cd pdlib \
-    && phpize \
-    && ./configure \
-    && make \
-    && make install
-    
-# Enable PDlib on builder
+RUN wget -c -q https://github.com/goodspb/pdlib/archive/$PDLIB_BRANCH.zip \
+&& mkdir -p /usr/src/php/ext/ \
+&& unzip -d /usr/src/php/ext/ $PDLIB_BRANCH.zip \
+&& rm $PDLIB_BRANCH.zip
 
-# If necesary take the php settings folder uncommenting the next line
-# RUN php -i | grep "Scan this dir for additional .ini files"
-RUN echo "extension=pdlib.so" > /usr/local/etc/php/conf.d/pdlib.ini
+RUN docker-php-ext-install pdlib-$PDLIB_BRANCH
 
-RUN echo $(ls -a /usr/local/lib/php/extensions/)
-
-######################################################################################
-######################################################################################
-
-FROM nextcloud:apache
-
-# Install dependencies to image
-
-RUN apt-get update ; \
-    apt-get install -y libopenblas-base libbz2-dev
-
-# Install bzip2 needed to extract models
-
-RUN docker-php-ext-install bz2
-
-# Install dlib and PDlib to image
-
-COPY --from=builder /usr/local/lib/libdlib.so* /usr/local/lib
-
-# If is necesary take the php extention folder (/usr/local/lib/php/extensions/no-debug-non-zts-20180731) uncommenting the next line
-# RUN php -i | grep extension_dir
-COPY --from=builder /usr/local/lib/php/extensions/no-debug-non-zts-20220829/pdlib.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/
-RUN echo $(ls -a /usr/local/lib/php/extensions/no-debug-non-zts/)
-# Enable PDlib on final image
-RUN echo "extension=pdlib.so" > /usr/local/etc/php/conf.d/pdlib.ini
+# Clean up build deps
+RUN apt-get autoremove -y $BUILD_DEPS
 
 # Proceed with other Nextcloud stuff
 RUN set -ex; \
@@ -104,9 +75,9 @@ RUN set -ex; \
     apt-mark auto '.*' > /dev/null; \
     apt-mark manual $savedAptMark; \
     ldd "$(php -r 'echo ini_get("extension_dir");')"/*.so \
-        | awk '/=>/ { print $3 }' \
+        | awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); print so }' \
         | sort -u \
-        | xargs -r dpkg-query -S \
+        | xargs -r dpkg-query --search \
         | cut -d: -f1 \
         | sort -u \
         | xargs -rt apt-mark manual; \
@@ -122,6 +93,5 @@ RUN mkdir -p \
 COPY supervisord.conf /
 
 ENV NEXTCLOUD_UPDATE=1
-ENV PHP_MEMORY_LIMIT 32G
 
 CMD ["/usr/bin/supervisord", "-c", "/supervisord.conf"]
