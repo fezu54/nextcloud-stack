@@ -1,4 +1,4 @@
-FROM nextcloud:27.0.2-apache 
+FROM nextcloud:27-apache 
 # Dependencies for facerecognition app
 ARG BUILD_DEPS="gnupg2 wget unzip libx11-dev libbz2-dev cmake"
 
