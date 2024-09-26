@@ -48,8 +48,8 @@ services:
     build:
       context: ./backup
       args:
-        BORGMATIC_VERSION: 1.8.10
-        RCLONE_VERSION: v1.66.0
+        BORGMATIC_VERSION: 1.8.14
+        RCLONE_VERSION: v1.68.1
     volumes:
       - nextcloud:/mnt/source:ro
       - ${VOLUME_TARGET}:/mnt/borg-repository
