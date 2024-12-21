@@ -28,8 +28,8 @@ services:
       - type: tmpfs
         target: /tmp:exec
     environment:
-      - VIRTUAL_HOST=${DNS_ADDRESS}
-      - LETSENCRYPT_HOST=${DNS_ADDRESS}
+      - VIRTUAL_HOST=${NEXTCLOUD_PREFIX}.${DNS_ADDRESS}
+      - LETSENCRYPT_HOST=${NEXTCLOUD_PREFIX}.${DNS_ADDRESS}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
       - MYSQL_HOST=db
       - REDIS_HOST=redis
@@ -43,6 +43,23 @@ services:
       - proxy-tier
       - default
       - backups
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    restart: always
+    volumes:
+      - vaultwarden:/data
+    environment:
+      #- ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      - VIRTUAL_HOST=${VAULTWARDEN_PREFIX}.${DNS_ADDRESS}
+      - LETSENCRYPT_HOST=${VAULTWARDEN_PREFIX}.${DNS_ADDRESS}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+    networks:
+      - default
+      - proxy-tier
+      - backups
+    env_file:
+      - db.env
 
   borgmatic_backup:
     build:
@@ -127,6 +144,7 @@ volumes:
   html:
   borg-cache:
   borg-config:
+  vaultwarden:
 
 networks:
   proxy-tier:
