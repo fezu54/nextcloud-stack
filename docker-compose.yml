@@ -55,11 +55,8 @@ services:
       - LETSENCRYPT_HOST=${VAULTWARDEN_PREFIX}.${DNS_ADDRESS}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
     networks:
-      - default
       - proxy-tier
       - backups
-    env_file:
-      - db.env
 
   borgmatic_backup:
     build:
@@ -69,6 +66,7 @@ services:
         RCLONE_VERSION: v1.68.2
     volumes:
       - nextcloud:/mnt/source:ro
+      - vaultwarden:/mnt/vaultwarden:ro
       - ${VOLUME_TARGET}:/mnt/borg-repository
       - ./backup/borgmatic.d:/etc/borgmatic.d
       - borg-config:/root/.config/borg
