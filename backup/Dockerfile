@@ -13,7 +13,7 @@ RUN unzip -j rclone-${RCLONE_VERSION}-linux-amd64.zip
 RUN chmod 0700 simplepush.sh
 RUN chmod 0700 rclone
  
-FROM b3vis/borgmatic:${BORGMATIC_VERSION}
+FROM ghcr.io/borgmatic-collective/borgmatic:${BORGMATIC_VERSION}
 COPY --from=builder simplepush.sh /usr/local/bin/
 COPY --from=builder rclone /usr/local/bin/
 RUN apk add openssl
