@@ -1,6 +1,10 @@
 # nextcloud-stack
 This is my personal docker-compose stack to deploy Nextcloud on a self hosted machine. It includes https://github.com/b3vis/docker-borgmatic to create hot backups of the nextcloud volume (config, data, themes) and dumps of the running MariaDB.
 
+## Vaultwarden
+In addition to Nextcloud, this stack also deploys [Vaultwarden](https://github.com/dani-garcia/vaultwarden) to store your passwords and secrets. It is configured to use the standard SQLIte database which is also included in the borgmatic backup.
+Other than that, currently only the `attachments` folder is included as well. For more information about backup and restore, check the [Vaultwarden documentation](https://github.com/dani-garcia/vaultwarden/wiki/Backing-up-your-vault).
+
 ## rclone configuration
 [Rclone](https://rclone.org/) is used to automatically upload your local backups to a cloud provider. It can be configured via environment variables: https://rclone.org/docs/#environment-variables. The exact configuration depends on your cloud provider.
 
@@ -12,6 +16,9 @@ In addition it sends encrypted messages to your Smartphone via [Simplepush](http
 COMPOSE_PROJECT_NAME=nextcloud
 MYSQL_ROOT_PASSWORD={YOUR_SECRET_ROOT_PASSWORD}
 DNS_ADDRESS={YOUR_DNS_ADDRESS}
+VAULTWARDEN_PREFIX={YOUR_VAULTWARDEN_SUBDOMAIN}
+VAULTWARDEN_ADMIN_TOKEN={YOUR_VAULTWARDEN_ADMIN_TOKEN}
+NEXTCLOUD_PREFIX={YOUR_NEXTCLOUD_SUBDOMAIN}
 LETSENCRYPT_EMAIL={YOUR_EMAIL_ADDRESS}
 TZ={YOUR_TIMEZONE}  # cat /etc/timezone
 BORG_PASSPHRASE={YOUR_SECURE_BORG_PASSWORD} # encrypts your backups, useful to upload the archive to services like AWS Glacier
