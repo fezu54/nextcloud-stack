@@ -19,7 +19,7 @@ services:
     restart: always
 
   app:
-    build: ./app
+    image: nextcloud:31-apache
     restart: always
     volumes:
       - nextcloud:/var/www/html
@@ -62,7 +62,7 @@ services:
     build:
       context: ./backup
       args:
-        BORGMATIC_VERSION: 1.9.3
+        BORGMATIC_VERSION: 2.0.7
         RCLONE_VERSION: v1.68.2
     volumes:
       - nextcloud:/mnt/source:ro
@@ -104,8 +104,8 @@ services:
     build: ./proxy
     restart: always
     ports:
-      - 80:80
-      - 443:443
+      - "80:80"
+      - "443:443"
     labels:
       com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
     volumes:
