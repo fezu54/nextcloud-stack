@@ -19,7 +19,7 @@ services:
     restart: always
 
   app:
-    image: nextcloud:31-apache
+    image: nextcloud:32-apache
     restart: always
     volumes:
       - nextcloud:/var/www/html
@@ -50,7 +50,7 @@ services:
     volumes:
       - vaultwarden:/data
     environment:
-      #- ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      # - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
       - VIRTUAL_HOST=${VAULTWARDEN_PREFIX}.${DNS_ADDRESS}
       - LETSENCRYPT_HOST=${VAULTWARDEN_PREFIX}.${DNS_ADDRESS}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
