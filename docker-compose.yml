@@ -126,6 +126,21 @@ services:
     networks:
       - proxy-tier
 
+  forwarded-for-headers-init:
+    image: nextcloud:${NEXTCLOUD_VERSION}
+    depends_on:
+      - app
+    volumes:
+      - nextcloud:/var/www/html
+      - ./scripts/forwarded-for-headers-init.sh:/usr/local/bin/nextcloud-init.sh:ro
+    entrypoint: ["/bin/bash","/usr/local/bin/nextcloud-init.sh"]
+    restart: no
+    networks:
+      - proxy-tier
+      - default
+      - backups
+
+
   letsencrypt-companion:
     image: nginxproxy/acme-companion
     restart: always
@@ -153,4 +168,4 @@ volumes:
 
 networks:
   proxy-tier:
-  backups:
+  backups:i
