@@ -114,6 +114,8 @@ services:
       - ntfy_config:/etc/ntfy
     environment:
       - TZ=${TZ}
+      - NTFY_BASE_URL=https://${NTFY_PREFIX}.${DNS_ADDRESS}
+      - NTFY_BEHIND_PROXY=true
       - VIRTUAL_HOST=${NTFY_PREFIX}.${DNS_ADDRESS}
       - LETSENCRYPT_HOST=${NTFY_PREFIX}.${DNS_ADDRESS}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
