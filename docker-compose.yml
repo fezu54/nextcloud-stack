@@ -120,7 +120,6 @@ services:
       - vhost.d:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./proxy/conf/forwarded_headers.conf:/etc/nginx/conf.d/forwarded_headers.conf:ro
     environment:
       - ENABLE_IPV6=true
     networks:
