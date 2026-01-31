@@ -77,9 +77,8 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - NEXTCLOUD_DATABASE=nextcloud
       - MYSQL_PWD=${MYSQL_ROOT_PASSWORD}
-      - SIMPLEPUSH_KEY
-      - SIMPLEPUSH_PASSWORD
-      - SIMPLEPUSH_SALT
+      - NTFY_TOPIC=${NTFY_TOPIC}
+      - NTFY_URL=http://ntfy:80
       - RCLONE_CONFIG_NEXTCLOUD_TYPE
       - RCLONE_CONFIG_NEXTCLOUD_PROVIDER
       - RCLONE_CONFIG_NEXTCLOUD_ACL
@@ -105,6 +104,22 @@ services:
     networks:
       - backups
       - default
+
+  ntfy:
+    image: binwiederhier/ntfy
+    restart: always
+    command: serve
+    volumes:
+      - ntfy_cache:/var/cache/ntfy
+      - ntfy_config:/etc/ntfy
+    environment:
+      - TZ=${TZ}
+      - VIRTUAL_HOST=${NTFY_PREFIX}.${DNS_ADDRESS}
+      - LETSENCRYPT_HOST=${NTFY_PREFIX}.${DNS_ADDRESS}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+    networks:
+      - backups
+      - proxy-tier
 
   proxy:
     build: ./proxy
@@ -149,6 +164,8 @@ volumes:
   borg-cache:
   borg-config:
   vaultwarden:
+  ntfy_cache:
+  ntfy_config:
 
 networks:
   proxy-tier:

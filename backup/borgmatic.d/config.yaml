@@ -22,10 +22,10 @@ after_actions:
     - echo "Uploading backup..."
     - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -P --dry-run
     - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -v
-    - simplepush.sh -t "Backup done" -m "Creation and uploading of backup successful"
+    - curl -d "Creation and uploading of backup successful" -H "Title: Backup done" ${NTFY_URL}/${NTFY_TOPIC}
 on_error:
     - echo "Error while creating a backup."
-    - simplepush.sh -t "Error creating backup" -m "Creation of backup failed. Check borgmatic logs."
+    - curl -d "Creation of backup failed. Check borgmatic logs." -H "Title: Error creating backup" ${NTFY_URL}/${NTFY_TOPIC}
 mariadb_databases:
     - name: all
       hostname: db
