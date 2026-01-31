@@ -91,7 +91,7 @@ services:
       - backups
         
   cron:
-    image: nextcloud:apache
+    image: nextcloud:32-apache
     restart: always
     volumes:
       - nextcloud:/var/www/html
@@ -99,6 +99,12 @@ services:
     depends_on:
       - db
       - redis
+    environment:
+      - MYSQL_HOST=db
+      - REDIS_HOST=redis
+    networks:
+      - backups
+      - default
 
   proxy:
     build: ./proxy
