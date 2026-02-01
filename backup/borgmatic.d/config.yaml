@@ -1,38 +1,65 @@
 source_directories:
     - /mnt/source
     - /mnt/vaultwarden/attachments
+
 repositories:
-    - /mnt/borg-repository
+    - path: /mnt/borg-repository
+
 one_file_system: true
 archive_name_format: 'backup-{now}'
+
 keep_hourly: 2
 keep_daily: 7
 keep_weekly: 4
 keep_monthly: 12
 keep_yearly: 10
+
 checks:
-    - repository
-    - archives
+    - name: repository
+    - name: archives
+
 check_last: 3
-hooks:
-    before_backup:
+
+commands:
+    - name: start-backup
+      before: action
+      when:
+        - create
+      run:
         - echo "Starting a backup job..."
-    after_backup:
-        - echo "Backup created..." 
-    after_actions:
+
+    - name: backup-created
+      after: action
+      when:
+        - create
+      run:
+        - echo "Backup created..."
+
+    - name: upload-backup
+      after: action
+      when:
+        - create
+        - prune
+        - compact
+        - check
+      run:
         - echo "Uploading backup..."
         - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -P --dry-run
         - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -v
         - 'curl -d "Creation and uploading of backup successful" -H "Title: Backup done" ${NTFY_URL}/${NTFY_TOPIC}'
-    on_error:
+
+    - name: error-notification
+      after: error
+      run:
         - echo "Error while creating a backup."
         - 'curl -d "Creation of backup failed. Check borgmatic logs." -H "Title: Error creating backup" ${NTFY_URL}/${NTFY_TOPIC}'
+
 mariadb_databases:
     - name: all
       hostname: db
       port: 3306
       username: root
+
 sqlite_databases:
     - name: vaultwarden
       path: /mnt/vaultwarden/db.sqlite3
-
