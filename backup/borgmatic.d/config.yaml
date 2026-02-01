@@ -14,18 +14,19 @@ checks:
     - repository
     - archives
 check_last: 3
-before_backup:
-    - echo "Starting a backup job..."
-after_backup:
-    - echo "Backup created..." 
-after_actions:
-    - echo "Uploading backup..."
-    - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -P --dry-run
-    - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -v
-    - curl -d "Creation and uploading of backup successful" -H "Title: Backup done" ${NTFY_URL}/${NTFY_TOPIC}
-on_error:
-    - echo "Error while creating a backup."
-    - curl -d "Creation of backup failed. Check borgmatic logs." -H "Title: Error creating backup" ${NTFY_URL}/${NTFY_TOPIC}
+hooks:
+    before_backup:
+        - echo "Starting a backup job..."
+    after_backup:
+        - echo "Backup created..." 
+    after_actions:
+        - echo "Uploading backup..."
+        - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -P --dry-run
+        - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -v
+        - 'curl -d "Creation and uploading of backup successful" -H "Title: Backup done" ${NTFY_URL}/${NTFY_TOPIC}'
+    on_error:
+        - echo "Error while creating a backup."
+        - 'curl -d "Creation of backup failed. Check borgmatic logs." -H "Title: Error creating backup" ${NTFY_URL}/${NTFY_TOPIC}'
 mariadb_databases:
     - name: all
       hostname: db
