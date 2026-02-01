@@ -21,22 +21,19 @@ checks:
 check_last: 3
 
 commands:
-    - name: start-backup
-      before: action
+    - before: action
       when:
         - create
       run:
         - echo "Starting a backup job..."
 
-    - name: backup-created
-      after: action
+    - after: action
       when:
         - create
       run:
         - echo "Backup created..."
 
-    - name: upload-backup
-      after: action
+    - after: action
       when:
         - create
         - prune
@@ -48,8 +45,7 @@ commands:
         - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -v
         - 'curl -d "Creation and uploading of backup successful" -H "Title: Backup done" ${NTFY_URL}/${NTFY_TOPIC}'
 
-    - name: error-notification
-      after: error
+    - after: error
       run:
         - echo "Error while creating a backup."
         - 'curl -d "Creation of backup failed. Check borgmatic logs." -H "Title: Error creating backup" ${NTFY_URL}/${NTFY_TOPIC}'
