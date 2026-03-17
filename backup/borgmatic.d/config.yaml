@@ -1,31 +1,49 @@
-source_directories:
-    - /mnt/source
-    - /mnt/vaultwarden/attachments
-repositories:
-    - /mnt/borg-repository
-one_file_system: true
-archive_name_format: 'backup-{now}'
-keep_hourly: 2
-keep_daily: 7
-keep_weekly: 4
-keep_monthly: 12
-keep_yearly: 10
-checks:
-    - repository
-    - archives
-check_last: 3
-before_backup:
-    - echo "Starting a backup job..."
-after_backup:
-    - echo "Backup created..." 
-after_actions:
-    - echo "Uploading backup..."
-    - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -P --dry-run
-    - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -v
-    - simplepush.sh -t "Backup done" -m "Creation and uploading of backup successful"
-on_error:
-    - echo "Error while creating a backup."
-    - simplepush.sh -t "Error creating backup" -m "Creation of backup failed. Check borgmatic logs."
+location:
+    source_directories:
+        - /mnt/source
+        - /mnt/vaultwarden/attachments
+    repositories:
+        - /mnt/borg-repository
+    one_file_system: true
+
+storage:
+    archive_name_format: 'backup-{now}'
+
+retention:
+    keep_hourly: 2
+    keep_daily: 7
+    keep_weekly: 4
+    keep_monthly: 12
+    keep_yearly: 10
+
+consistency:
+    checks:
+        - repository
+        - archives
+    check_last: 3
+
+commands:
+    - before: action
+      when: [create]
+      run:
+          - echo "Starting a backup job..."
+    - after: action
+      when: [create]
+      states: [finish]
+      run:
+          - echo "Backup created..." 
+    - after: everything
+      states: [finish]
+      run:
+          - echo "Uploading backup..."
+          - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -P --dry-run
+          - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -v
+          - simplepush.sh -t "Backup done" -m "Creation and uploading of backup successful"
+    - after: error
+      run:
+          - echo "Error while creating a backup."
+          - simplepush.sh -t "Error creating backup" -m "Creation of backup failed. Check borgmatic logs."
+
 mariadb_databases:
     - name: all
       hostname: db
@@ -34,4 +52,3 @@ mariadb_databases:
 sqlite_databases:
     - name: vaultwarden
       path: /mnt/vaultwarden/db.sqlite3
-

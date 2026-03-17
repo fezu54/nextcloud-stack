@@ -1,19 +1,28 @@
 ARG BORGMATIC_VERSION
-FROM alpine:3.17.0 as builder                                                                                                                                                                      
+FROM alpine:3.20 as builder                                                                                                                                                                      
 
 ARG RCLONE_VERSION
 
 RUN apk add --no-cache \
     curl \
     unzip
-RUN curl -O https://raw.githubusercontent.com/simplepush/send-encrypted/master/simplepush.sh
-RUN curl -O https://downloads.rclone.org/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-linux-amd64.zip
+
+RUN curl -L -o simplepush.sh https://raw.githubusercontent.com/simplepush/send-encrypted/master/simplepush.sh \
+    && echo "da0525222e9efc633cda9651328b73064b18e91e8db3f936c60366bc6250bb7e  simplepush.sh" | sha256sum -c -
+
+RUN curl -O https://downloads.rclone.org/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-linux-amd64.zip \
+    && echo "97a526c75bd0bd158a03f13585e83e9ce92fdf8989188982c94c32e4f91c9807  rclone-${RCLONE_VERSION}-linux-amd64.zip" | sha256sum -c -
  
 RUN unzip -j rclone-${RCLONE_VERSION}-linux-amd64.zip
-RUN chmod 0700 simplepush.sh
-RUN chmod 0700 rclone
+RUN chmod 0755 simplepush.sh
+RUN chmod 0755 rclone
  
 FROM ghcr.io/borgmatic-collective/borgmatic:${BORGMATIC_VERSION}
-COPY --from=builder simplepush.sh /usr/local/bin/
-COPY --from=builder rclone /usr/local/bin/
-RUN apk add openssl
+# Install dependencies for simplepush.sh (bash, curl, openssl)
+RUN apk add --no-cache bash curl openssl
+
+COPY --from=builder /simplepush.sh /usr/local/bin/simplepush.sh
+COPY --from=builder /rclone /usr/local/bin/rclone
+
+# Ensure the scripts are executable in the final image
+RUN chmod +x /usr/local/bin/simplepush.sh /usr/local/bin/rclone
