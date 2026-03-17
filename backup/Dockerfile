@@ -8,7 +8,7 @@ RUN apk add --no-cache \
     unzip
 
 RUN curl -L -o simplepush.sh https://raw.githubusercontent.com/simplepush/send-encrypted/master/simplepush.sh \
-    && echo "da0525222e9efc633cda9651328b73064b18e91e8db3f936c60366bc6250bb7e  simplepush.sh" | sha256sum -c -
+    && echo "e2970d22510ee2f7e6033100ef71e9f6531080a3df4bb6952172730ba866f94f  simplepush.sh" | sha256sum -c -
 
 RUN curl -O https://downloads.rclone.org/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-linux-amd64.zip \
     && echo "97a526c75bd0bd158a03f13585e83e9ce92fdf8989188982c94c32e4f91c9807  rclone-${RCLONE_VERSION}-linux-amd64.zip" | sha256sum -c -
