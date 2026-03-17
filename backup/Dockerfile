@@ -11,7 +11,7 @@ RUN curl -L -o simplepush.sh https://raw.githubusercontent.com/simplepush/send-e
     && echo "e2970d22510ee2f7e6033100ef71e9f6531080a3df4bb6952172730ba866f94f  simplepush.sh" | sha256sum -c -
 
 RUN curl -O https://downloads.rclone.org/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-linux-amd64.zip \
-    && echo "97a526c75bd0bd158a03f13585e83e9ce92fdf8989188982c94c32e4f91c9807  rclone-${RCLONE_VERSION}-linux-amd64.zip" | sha256sum -c -
+    && echo "00a1d8cb85552b7b07bb0416559b2e78fcf9c6926662a52682d81b5f20c90535  rclone-${RCLONE_VERSION}-linux-amd64.zip" | sha256sum -c -
  
 RUN unzip -j rclone-${RCLONE_VERSION}-linux-amd64.zip
 RUN chmod 0755 simplepush.sh
