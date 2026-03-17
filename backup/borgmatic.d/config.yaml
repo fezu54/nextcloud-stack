@@ -1,26 +1,22 @@
-location:
-    source_directories:
-        - /mnt/source
-        - /mnt/vaultwarden/attachments
-    repositories:
-        - /mnt/borg-repository
-    one_file_system: true
+source_directories:
+    - /mnt/source
+    - /mnt/vaultwarden/attachments
+repositories:
+    - path: /mnt/borg-repository
+one_file_system: true
 
-storage:
-    archive_name_format: 'backup-{now}'
+archive_name_format: 'backup-{now}'
 
-retention:
-    keep_hourly: 2
-    keep_daily: 7
-    keep_weekly: 4
-    keep_monthly: 12
-    keep_yearly: 10
+keep_hourly: 2
+keep_daily: 7
+keep_weekly: 4
+keep_monthly: 12
+keep_yearly: 10
 
-consistency:
-    checks:
-        - repository
-        - archives
-    check_last: 3
+checks:
+    - name: repository
+    - name: archives
+check_last: 3
 
 commands:
     - before: action
