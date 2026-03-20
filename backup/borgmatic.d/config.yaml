@@ -1,10 +1,11 @@
 source_directories:
     - /mnt/source
     - /mnt/vaultwarden/attachments
+
 repositories:
     - path: /mnt/borg-repository
-one_file_system: true
 
+one_file_system: true
 archive_name_format: 'backup-{now}'
 
 keep_hourly: 2
@@ -16,35 +17,45 @@ keep_yearly: 10
 checks:
     - name: repository
     - name: archives
+
 check_last: 3
 
 commands:
     - before: action
-      when: [create]
+      when:
+        - create
       run:
-          - echo "Starting a backup job..."
+        - echo "Starting a backup job..."
+
     - after: action
-      when: [create]
-      states: [finish]
+      when:
+        - create
       run:
-          - echo "Backup created..." 
-    - after: everything
-      states: [finish]
+        - echo "Backup created..."
+
+    - after: action
+      when:
+        - create
+        - prune
+        - compact
+        - check
       run:
-          - echo "Uploading backup..."
-          - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -P --dry-run
-          - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -v
-          - simplepush.sh -t "Backup done" -m "Creation and uploading of backup successful"
+        - echo "Uploading backup..."
+        - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -P --dry-run
+        - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -v
+        - 'curl -d "Creation and uploading of backup successful" -H "Title: Backup done" ${NTFY_URL}/${NTFY_TOPIC}'
+
     - after: error
       run:
-          - echo "Error while creating a backup."
-          - simplepush.sh -t "Error creating backup" -m "Creation of backup failed. Check borgmatic logs."
+        - echo "Error while creating a backup."
+        - 'curl -d "Creation of backup failed. Check borgmatic logs." -H "Title: Error creating backup" ${NTFY_URL}/${NTFY_TOPIC}'
 
 mariadb_databases:
     - name: all
       hostname: db
       port: 3306
       username: root
+
 sqlite_databases:
     - name: vaultwarden
       path: /mnt/vaultwarden/db.sqlite3

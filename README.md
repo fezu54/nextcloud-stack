@@ -8,7 +8,6 @@ Other than that, currently only the `attachments` folder is included as well. Fo
 ## rclone configuration
 [Rclone](https://rclone.org/) is used to automatically upload your local backups to a cloud provider. It can be configured via environment variables: https://rclone.org/docs/#environment-variables. The exact configuration depends on your cloud provider.
 
-In addition it sends encrypted messages to your Smartphone via [Simplepush](https://simplepush.io/) in case of a backup failed.
 # Usage
 1. Clone this repository
 2. Create a .env file with following content:
@@ -23,9 +22,8 @@ LETSENCRYPT_EMAIL={YOUR_EMAIL_ADDRESS}
 TZ={YOUR_TIMEZONE}  # cat /etc/timezone
 BORG_PASSPHRASE={YOUR_SECURE_BORG_PASSWORD} # encrypts your backups, useful to upload the archive to services like AWS Glacier
 VOLUME_TARGET={PATH_TO_YOUR_BACKUP_FOLDER}
-SIMPLEPUSH_KEY={YOUR_UNIQUE_KEY}
-SIMPLEPUSH_PASSWORD={YOUR_SIMPLEPUSH_PASSWORD} # if not set messages are not encrypted
-SIMPLEPUSH_SALT={YOUR_SIMPLEPUSH_SALT}
+NTFY_PREFIX={YOUR_NTFY_SUBDOMAIN}
+NTFY_TOPIC={YOUR_NTFY_TOPIC}
 
 # Check https://rclone.org/docs/#configure or your cloud provider documentation
 RCLONE_CONFIG_NEXTCLOUD_TYPE=
