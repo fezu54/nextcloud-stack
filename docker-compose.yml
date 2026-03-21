@@ -19,7 +19,7 @@ services:
     restart: always
 
   app:
-    image: nextcloud:32-apache
+    image: nextcloud:33-apache
     restart: always
     volumes:
       - nextcloud:/var/www/html
