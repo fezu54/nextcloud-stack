@@ -78,6 +78,7 @@ services:
       - NEXTCLOUD_DATABASE=nextcloud
       - MYSQL_PWD=${MYSQL_ROOT_PASSWORD}
       - NTFY_TOPIC=${NTFY_TOPIC}
+      - NTFY_TOKEN=${NTFY_TOKEN}
       - NTFY_URL=http://ntfy:80
       - RCLONE_CONFIG_NEXTCLOUD_TYPE
       - RCLONE_CONFIG_NEXTCLOUD_PROVIDER
@@ -116,6 +117,8 @@ services:
       - TZ=${TZ}
       - NTFY_BASE_URL=https://${NTFY_PREFIX}.${DNS_ADDRESS}
       - NTFY_BEHIND_PROXY=true
+      - NTFY_AUTH_FILE=/var/cache/ntfy/user.db
+      - NTFY_AUTH_DEFAULT_ACCESS=deny-all
       - VIRTUAL_HOST=${NTFY_PREFIX}.${DNS_ADDRESS}
       - VIRTUAL_PORT=80
       - LETSENCRYPT_HOST=${NTFY_PREFIX}.${DNS_ADDRESS}
