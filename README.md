@@ -8,7 +8,29 @@ Other than that, currently only the `attachments` folder is included as well. Fo
 ## rclone configuration
 [Rclone](https://rclone.org/) is used to automatically upload your local backups to a cloud provider. It can be configured via environment variables: https://rclone.org/docs/#environment-variables. The exact configuration depends on your cloud provider.
 
-In addition it sends encrypted messages to your Smartphone via [Simplepush](https://simplepush.io/) in case of a backup failed.
+## ntfy (Notifications)
+[ntfy](https://ntfy.sh/) is used to send notifications about backup status. To prevent unauthorized access to your notification topics, authentication should be enabled.
+
+### Setup Authentication
+1. Start the stack: `docker compose up -d`
+2. Create an admin user (you will be prompted for a password):
+   ```bash
+   docker compose exec ntfy ntfy user add --role=admin your_username
+   ```
+3. Generate an access token for the backup service:
+   ```bash
+   docker compose exec ntfy ntfy token add your_username
+   ```
+4. Copy the generated token and add it to your `.env` file as `NTFY_TOKEN`.
+
+### Smartphone App
+To receive notifications on your mobile device, install the `ntfy` app:
+- **Android (Google Play):** [ntfy - PUT/POST to your phone](https://play.google.com/store/apps/details?id=io.heckel.ntfy)
+- **Android (F-Droid):** [ntfy on F-Droid](https://f-droid.org/packages/io.heckel.ntfy/)
+- **iOS (Apple App Store):** [ntfy on the App Store](https://apps.apple.com/app/ntfy/id1625396347)
+
+Once installed, add your self-hosted server in the app settings to start receiving notifications from your stack.
+
 # Usage
 1. Clone this repository
 2. Create a .env file with following content:
@@ -23,9 +45,9 @@ LETSENCRYPT_EMAIL={YOUR_EMAIL_ADDRESS}
 TZ={YOUR_TIMEZONE}  # cat /etc/timezone
 BORG_PASSPHRASE={YOUR_SECURE_BORG_PASSWORD} # encrypts your backups, useful to upload the archive to services like AWS Glacier
 VOLUME_TARGET={PATH_TO_YOUR_BACKUP_FOLDER}
-SIMPLEPUSH_KEY={YOUR_UNIQUE_KEY}
-SIMPLEPUSH_PASSWORD={YOUR_SIMPLEPUSH_PASSWORD} # if not set messages are not encrypted
-SIMPLEPUSH_SALT={YOUR_SIMPLEPUSH_SALT}
+NTFY_PREFIX={YOUR_NTFY_SUBDOMAIN}
+NTFY_TOPIC={YOUR_NTFY_TOPIC}
+NTFY_TOKEN={YOUR_NTFY_ACCESS_TOKEN}
 
 # Check https://rclone.org/docs/#configure or your cloud provider documentation
 RCLONE_CONFIG_NEXTCLOUD_TYPE=
