@@ -43,12 +43,12 @@ commands:
         - echo "Uploading backup..."
         - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -P --dry-run
         - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -v
-        - 'curl -H "Authorization: Bearer ${NTFY_TOKEN}" -d "Creation and uploading of backup successful" -H "Title: Backup done" ${NTFY_URL}/${NTFY_TOPIC}'
+        - 'curl -H "Authorization: Bearer ${NTFY_TOKEN}" -d "Borgmatic backup, pruning, and cloud sync completed successfully." -H "Title: Backup Success" -H "Tags: white_check_mark,package,cloud" ${NTFY_URL}/${NTFY_TOPIC}'
 
     - after: error
       run:
         - echo "Error while creating a backup."
-        - 'curl -H "Authorization: Bearer ${NTFY_TOKEN}" -d "Creation of backup failed. Check borgmatic logs." -H "Title: Error creating backup" ${NTFY_URL}/${NTFY_TOPIC}'
+        - 'curl -H "Authorization: Bearer ${NTFY_TOKEN}" -d "Backup failed: {error}" -H "Title: Backup Error" -H "Tags: warning,skull" ${NTFY_URL}/${NTFY_TOPIC}'
 
 mariadb_databases:
     - name: all
