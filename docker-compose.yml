@@ -67,6 +67,7 @@ services:
     volumes:
       - nextcloud:/mnt/source:ro
       - vaultwarden:/mnt/vaultwarden:ro
+      - freshrss_data:/mnt/freshrss:ro
       - ${VOLUME_TARGET}:/mnt/borg-repository
       - ./backup/borgmatic.d:/etc/borgmatic.d
       - borg-config:/root/.config/borg
@@ -76,6 +77,7 @@ services:
       - BORG_PASSPHRASE=${BORG_PASSPHRASE}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - NEXTCLOUD_DATABASE=nextcloud
+      - FRESHRSS_DATABASE=freshrss
       - MYSQL_PWD=${MYSQL_ROOT_PASSWORD}
       - NTFY_TOPIC=${NTFY_TOPIC}
       - NTFY_TOKEN=${NTFY_TOKEN}
@@ -127,6 +129,30 @@ services:
       - backups
       - proxy-tier
 
+  freshrss:
+    image: freshrss/freshrss:latest
+    container_name: freshrss
+    restart: always
+    environment:
+      - TZ=${TZ}
+      - CRON_MIN=1,31
+      - DB_TYPE=mysql
+      - DB_HOST=db
+      - DB_USER=freshrss
+      - DB_PASSWORD=${FRESH_RSS_DB_PASSWORD}
+      - DB_BASE=freshrss
+      - VIRTUAL_HOST=${FRESH_RSS_PREFIX}.${DNS_ADDRESS}
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=${FRESH_RSS_PREFIX}.${DNS_ADDRESS}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+    volumes:
+      - freshrss_data:/var/www/FreshRSS/data
+    networks:
+      - proxy-tier
+      - backups
+    depends_on:
+      - db
+
   proxy:
     build: ./proxy
     restart: always
@@ -163,6 +189,7 @@ services:
 volumes:
   db:
   nextcloud:
+  freshrss_data:
   certs:
   acme:
   html:

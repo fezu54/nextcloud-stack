@@ -1,6 +1,7 @@
 source_directories:
     - /mnt/source
     - /mnt/vaultwarden/attachments
+    - /mnt/freshrss
 
 repositories:
     - path: /mnt/borg-repository
