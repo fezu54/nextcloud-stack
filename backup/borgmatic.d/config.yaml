@@ -22,9 +22,7 @@ checks:
 check_last: 3
 
 commands:
-    - before: action
-      when:
-        - create
+    - before: everything
       run:
         - echo "Starting a backup job..."
 
@@ -34,19 +32,17 @@ commands:
       run:
         - echo "Backup created..."
 
-    - after: action
-      when:
-        - create
-        - prune
-        - compact
-        - check
+    - after: everything
+      states:
+        - finish
       run:
         - echo "Uploading backup..."
-        - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -P --dry-run
         - rclone sync /mnt/borg-repository nextcloud:nextcloud-backup -v
         - 'curl -H "Authorization: Bearer ${NTFY_TOKEN}" -d "Borgmatic backup, pruning, and cloud sync completed successfully." -H "Title: Backup Success" -H "Tags: white_check_mark,package,cloud" ${NTFY_URL}/${NTFY_TOPIC}'
 
-    - after: error
+    - after: everything
+      states:
+        - fail
       run:
         - echo "Error while creating a backup."
         - 'curl -H "Authorization: Bearer ${NTFY_TOKEN}" -d "Backup failed: {error}" -H "Title: Backup Error" -H "Tags: warning,skull" ${NTFY_URL}/${NTFY_TOPIC}'
