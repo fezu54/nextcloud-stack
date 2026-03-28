@@ -125,6 +125,8 @@ services:
       - VIRTUAL_PORT=80
       - LETSENCRYPT_HOST=${NTFY_PREFIX}.${DNS_ADDRESS}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+      - NTFY_ENABLE_LOGIN=true
+      - NTFY_REQUIRE_LOGIN=true
     networks:
       - backups
       - proxy-tier
