@@ -143,9 +143,8 @@ fi
 # 3. Sync local files to remote
 echo "Syncing files to $REMOTE_HOST:$REMOTE_PATH..."
 rsync -avz \
-    --exclude='.git*' \
-    --exclude='.env' \
-    --exclude='db.env' \
+    --filter=':- .gitignore' \
+    --exclude='.git' \
     --exclude='deploy.sh' \
     ./ "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/"
 
