@@ -32,50 +32,86 @@ To receive notifications on your mobile device, install the `ntfy` app:
 Once installed, add your self-hosted server in the app settings to start receiving notifications from your stack.
 
 # Usage
-1. Clone this repository
-2. Create a .env file with following content:
-```bash
-COMPOSE_PROJECT_NAME=nextcloud
-MYSQL_ROOT_PASSWORD={YOUR_SECRET_ROOT_PASSWORD}
-DNS_ADDRESS={YOUR_DNS_ADDRESS}
-VAULTWARDEN_PREFIX={YOUR_VAULTWARDEN_SUBDOMAIN}
-VAULTWARDEN_ADMIN_TOKEN={YOUR_VAULTWARDEN_ADMIN_TOKEN}
-NEXTCLOUD_PREFIX={YOUR_NEXTCLOUD_SUBDOMAIN}
-LETSENCRYPT_EMAIL={YOUR_EMAIL_ADDRESS}
-TZ={YOUR_TIMEZONE}  # cat /etc/timezone
-BORG_PASSPHRASE={YOUR_SECURE_BORG_PASSWORD} # encrypts your backups, useful to upload the archive to services like AWS Glacier
-VOLUME_TARGET={PATH_TO_YOUR_BACKUP_FOLDER}
-NTFY_PREFIX={YOUR_NTFY_SUBDOMAIN}
-NTFY_TOPIC={YOUR_NTFY_TOPIC}
-NTFY_TOKEN={YOUR_NTFY_ACCESS_TOKEN}
 
-# Check https://rclone.org/docs/#configure or your cloud provider documentation
-RCLONE_CONFIG_NEXTCLOUD_TYPE=
-RCLONE_CONFIG_NEXTCLOUD_PROVIDER=
-RCLONE_CONFIG_NEXTCLOUD_ACL=
-RCLONE_CONFIG_NEXTCLOUD_ACCESS_KEY_ID=
-RCLONE_CONFIG_NEXTCLOUD_SECRET_ACCESS_KEY=
-RCLONE_CONFIG_NEXTCLOUD_ENDPOINT=
-```
-3. Create a db.env file with following content:
-```bash
-MYSQL_PASSWORD={YOUR_SECRET_USER_PASSWORD}
-MYSQL_USER={YOUR_SQL_USER_NAME}
+## 1. Secret Management (Vaultwarden)
+This stack is designed to be deployed securely using your local **Vaultwarden** (via `rbw`). Instead of keeping sensitive `.env` files on your server, create a single item in your vault (e.g., named `.env` in a "Nextcloud stack" folder) and add all your variables to its **Note** field in `KEY=VALUE` format:
+
+```text
+COMPOSE_PROJECT_NAME=nextcloud
+MYSQL_ROOT_PASSWORD=...
 MYSQL_DATABASE=nextcloud
+MYSQL_USER=nextcloud
+MYSQL_PASSWORD=...
+DNS_ADDRESS=...
+VAULTWARDEN_PREFIX=...
+NEXTCLOUD_PREFIX=...
+LETSENCRYPT_EMAIL=...
+TZ=...
+BORG_PASSPHRASE=...
+VOLUME_TARGET=...
+NTFY_PREFIX=...
+NTFY_TOPIC=...
+NTFY_TOKEN=...
+
+# rclone config
+RCLONE_CONFIG_NEXTCLOUD_TYPE=...
+...
 ```
-4. Start or update stack with 
-```
-docker-compose build --pull
-docker-compose up -d
-```
-5. Initialize the borg repository
+
+## 2. Deploy the Stack
+Use the provided `deploy.sh` script to sync your files and inject secrets from your vault directly into the remote server's memory.
+
 ```bash
-docker exec nextcloud_borgmatic_backup_1 sh -c "borgmatic --init --encryption repokey-blake2"
+# Unlock your local vault first
+rbw unlock
+
+# Run the deployment script
+./deploy.sh \
+  --user your_ssh_user \
+  --host your_server_ip \
+  --path ~/nextcloud-stack \
+  --item .env \
+  --folder "Nextcloud stack"
 ```
-6. Export borg repo key (to your backup folder)
-```bash
-docker exec nextcloud_borgmatic_backup_1 sh -c "borg key export /mnt/borg-repository /mnt/borg-repository/key-export.txt"
-```
+
+The script will:
+1. Fetch secrets from your local `rbw`.
+2. Sync the stack files to your remote server via `rsync`.
+3. Pull the latest images.
+4. Rebuild custom images (like backup/proxy) with the latest patches.
+5. Start/Restart the containers with the injected secrets.
+
+## 3. Initializing the Stack
+If this is a fresh installation:
+1. Initialize the borg repository:
+   ```bash
+   ssh your_ssh_user@your_server_ip "cd ~/nextcloud-stack && docker compose exec borgmatic_backup borgmatic --init --encryption repokey-blake2"
+   ```
+2. Export the borg repo key:
+   ```bash
+   ssh your_ssh_user@your_server_ip "cd ~/nextcloud-stack && docker compose exec borgmatic_backup borg key export /mnt/borg-repository /mnt/borg-repository/key-export.txt"
+   ```
+
+## 4. First Time Setup (Bootstrap)
+If you are deploying this stack for the very first time (and don't have a Vaultwarden account yet):
+
+1.  **Run in New Mode:**
+    ```bash
+    ./deploy.sh --user your_user --host your_ip --path ~/nextcloud-stack --new
+    ```
+    Enter your desired passwords and config when prompted.
+2.  **Create Vaultwarden Account:**
+    Once the stack is up, go to `https://vault.yourdomain.com` and register your account.
+3.  **Connect rbw Locally:**
+    ```bash
+    rbw config set base_url https://vault.yourdomain.com
+    rbw login
+    ```
+4.  **Migrate Secrets:**
+    Create a new item in your vault named `.env` and paste the variables you used in step 1 into the **Notes** field.
+5.  **Future Deploys:**
+    From now on, you can just use the standard command without the `--new` flag.
+
 # Backups
 The stack will automatically back up your running nextlcoud instance with the help of [borg](https://borgbackup.readthedocs.io/en/stable/index.html)/[borgmatic](https://torsion.org/borgmatic/). Per default, it will create a new backup every day at 1am. If you want to change this, adapt the [crontab.txt](https://github.com/fezu54/nextcloud-stack/blob/main/backup/borgmatic.d/crontab.txt) in this repository.
 
