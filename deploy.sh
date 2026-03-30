@@ -121,7 +121,7 @@ else
     echo "🔑 Item:   $VAULT_ITEM"
 
     # 2. Try to fetch secrets from rbw
-    if rbw unlock --check >/dev/null 2>&1; then
+    if rbw unlock >/dev/null 2>&1; then
         echo "🔓 Vault is unlocked. Fetching secrets..."
         
         # Execute the constructed rbw command
