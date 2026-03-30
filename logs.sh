@@ -21,5 +21,5 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Call management script with the deploy command
-./manage.sh "${mgmt_args[@]}" deploy "${docker_args[@]}"
+# Call management script with the logs command
+./manage.sh "${mgmt_args[@]}" logs "${docker_args[@]}"
