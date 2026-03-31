@@ -20,7 +20,7 @@ services:
     restart: always
 
   app:
-    image: nextcloud:33-apache
+    build: ./app
     restart: always
     volumes:
       - nextcloud:/var/www/html
@@ -96,7 +96,7 @@ services:
       - backups
         
   cron:
-    image: nextcloud:32-apache
+    build: ./app
     restart: always
     volumes:
       - nextcloud:/var/www/html
