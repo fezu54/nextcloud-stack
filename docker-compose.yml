@@ -37,6 +37,7 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - TRUSTED_PROXIES=172.16.0.0/12
     env_file:
       - php.env
     depends_on:
