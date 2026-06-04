@@ -52,6 +52,7 @@ VOLUME_TARGET=...
 NTFY_PREFIX=...
 NTFY_TOPIC=...
 NTFY_TOKEN=...
+APPAPI_SHARED_KEY=...
 
 # rclone config
 RCLONE_CONFIG_NEXTCLOUD_TYPE=...
@@ -128,4 +129,29 @@ This stack is not setting Nextcloud to [maintenance mode](https://docs.nextcloud
 5. Finally unmount and exit: `borg umount <mount_point> && exit.`
 
 In case Borg fails to create/acquire a lock: `borg break-lock /mnt/repository`
+
+# AppAPI & External Apps (ExApps)
+This stack supports Nextcloud External Apps via the **HaRP (Homeland App Runtime Platform)** daemon. This allows you to run resource-heavy applications (like AI tools or office integrations) in separate containers.
+
+### Manual Configuration
+After the first deployment, you must register the daemon in the Nextcloud Admin UI:
+
+1. Go to **Administration Settings > AppAPI**.
+2. Add or Edit a "Deploy Daemon" with these values:
+   - **Name**: `harp-proxy`
+   - **Deployment Method**: `docker-install`
+   - **HaRP Host**: `harp-proxy:8780` (⚠️ **Mandatory port 8780**)
+   - **HaRP Shared Key**: (The value of your `APPAPI_SHARED_KEY`)
+   - **Nextcloud URL**: `https://${NEXTCLOUD_PREFIX}.${DNS_ADDRESS}`
+
+If you encounter connection issues with `harp-proxy:8780`, try using **`proxy/exapps`** as the host. This uses the internal proxy bridge (port 80) for maximum stability.
+
+### Advanced Daemon Settings
+When configuring the `docker-install` daemon in Nextcloud:
+- **FRP Server Address**: `localhost:8782` (Internal HaRP default).
+- **Docker Network**: Set to `nextcloud_network` (to use the internal bridge network instead of `host`).
+
+### Technical Details
+- **Internal Proxying**: The stack automatically routes traffic from `yourdomain.com/exapps/` to the HaRP container using the `proxy/vhost.d/default` configuration.
+- **Timeouts**: Proxy timeouts are set to 3600s (1 hour) to accommodate long-running tasks like AI indexing or document conversion.
 
