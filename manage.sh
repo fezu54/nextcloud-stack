@@ -26,6 +26,7 @@ REQUIRED_VARS=(
     "NTFY_TOKEN"
     "FRESH_RSS_PREFIX"
     "FRESH_RSS_DB_PASSWORD"
+    "APPAPI_SHARED_KEY"
 )
 
 # Function to check local dependencies

@@ -1,0 +1,22 @@
+location /exapps/ {
+    proxy_pass http://harp-proxy:8780;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    
+    # HaRP needs high timeouts for some apps (especially AI ones)
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+}
+
+location /.well-known/microservices {
+    proxy_pass http://harp-proxy:8780;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+}
