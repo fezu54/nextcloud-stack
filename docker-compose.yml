@@ -1,6 +1,6 @@
 services:
   db:
-    image: mariadb:10.11
+    image: mariadb:lts
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     restart: always
     volumes:
@@ -90,8 +90,8 @@ services:
     build:
       context: ./backup
       args:
-        BORGMATIC_VERSION: 2.1.3
-        RCLONE_VERSION: v1.73.2
+        BORGMATIC_VERSION: 2.1.10
+        RCLONE_VERSION: v1.75.2
     volumes:
       - nextcloud:/mnt/source:ro
       - vaultwarden:/mnt/vaultwarden:ro
