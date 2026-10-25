@@ -23,6 +23,8 @@ check_last: 3
 
 commands:
     - before: everything
+      when:
+        - create
       run:
         - echo "Starting a backup job..."
 
@@ -33,6 +35,8 @@ commands:
         - echo "Backup created..."
 
     - after: everything
+      when:
+        - create
       states:
         - finish
       run:
@@ -41,6 +45,8 @@ commands:
         - 'curl -H "Authorization: Bearer ${NTFY_TOKEN}" -d "Borgmatic backup, pruning, and cloud sync completed successfully." -H "Title: Backup Success" -H "Tags: white_check_mark,package,cloud" ${NTFY_URL}/${NTFY_TOPIC}'
 
     - after: everything
+      when:
+        - create
       states:
         - fail
       run:
