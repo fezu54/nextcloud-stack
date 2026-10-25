@@ -132,6 +132,7 @@ services:
     environment:
       - MYSQL_HOST=db
       - REDIS_HOST=redis
+      - TZ=${TZ}
     networks:
       - backups
       - nextcloud_network

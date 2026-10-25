@@ -117,6 +117,10 @@ If you are deploying this stack for the very first time (and don't have a Vaultw
 The stack will automatically back up your running nextlcoud instance with the help of [borg](https://borgbackup.readthedocs.io/en/stable/index.html)/[borgmatic](https://torsion.org/borgmatic/). Per default, it will create a new backup every day at 1am. If you want to change this, adapt the [crontab.txt](https://github.com/fezu54/nextcloud-stack/blob/main/backup/borgmatic.d/crontab.txt) in this repository.
 
 ⚠️ It's important to save your borg repo key and the borgmatic passphrase somewhere secure. You'll need it to restore the backups.
+
+## Automatic App Updates
+The stack automatically updates all installed Nextcloud apps twice per day (at 02:00 and 14:00) by running `occ app:update --all` via the `cron` container.
+
 ## Nextcloud maintenance mode
 This stack is not setting Nextcloud to [maintenance mode](https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html#maintenance-mode). If you want to enusre that no data is modified while backups are taken, you can set Nextcloud to maintenance mode via crontab before the backups are taken and release it once the backups are done.
 ## Restore backups
