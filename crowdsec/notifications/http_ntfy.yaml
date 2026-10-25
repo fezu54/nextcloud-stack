@@ -1,0 +1,27 @@
+type: http
+name: http_ntfy
+log_level: info
+
+# Send directly to the internal ntfy container over the Docker network
+url: http://ntfy:80/${NTFY_TOPIC}
+method: POST
+
+headers:
+  Content-Type: "text/plain; charset=utf-8"
+  Title: "CrowdSec Security Alert"
+  Tags: "shield,warning"
+  Authorization: "Bearer ${NTFY_TOKEN}"
+
+# Compact, informative push notification layout
+format: |
+  {{range . -}}
+  {{$alert := . -}}
+  🚨 CrowdSec Security Alert
+  Scenario: {{$alert.Scenario}}
+  Source IP: {{$alert.Source.IP}} ({{$alert.Source.Cn}})
+  Events: {{$alert.EventsCount}}
+  {{range .Decisions -}}
+  Remediation: {{if .Simulated}}[SIMULATED] {{end}}{{.Type}} ({{.Duration}})
+  {{end -}}
+  CII: https://app.crowdsec.net/cti/{{$alert.Source.IP}}
+  {{end -}}

@@ -1,0 +1,12 @@
+name: custom/whitelists
+description: "Whitelist private IP ranges, localhost, and Docker bridge subnets"
+filter: "true"
+whitelist:
+  reason: "Private networks and internal docker bridge"
+  ip:
+    - "127.0.0.1"
+    - "::1"
+  cidr:
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"

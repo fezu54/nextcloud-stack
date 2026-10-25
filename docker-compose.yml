@@ -221,6 +221,32 @@ services:
     depends_on:
       - proxy
 
+  crowdsec:
+    image: crowdsecurity/crowdsec:latest
+    container_name: crowdsec
+    restart: always
+    environment:
+      - TZ=${TZ}
+      - COLLECTIONS=crowdsecurity/nginx crowdsecurity/http-cve crowdsecurity/base-http-scenarios crowdsecurity/sshd crowdsecurity/nextcloud crowdsecurity/whitelist-good-actors
+      - NTFY_TOPIC=${NTFY_TOPIC}
+      - NTFY_TOKEN=${NTFY_TOKEN}
+    volumes:
+      - crowdsec_data:/var/lib/crowdsec/data
+      - crowdsec_config:/etc/crowdsec
+      - ./crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
+      - ./crowdsec/notifications/http_ntfy.yaml:/etc/crowdsec/notifications/http_ntfy.yaml:ro
+      - ./crowdsec/profiles.yaml.local:/etc/crowdsec/profiles.yaml.local:ro
+      - ./crowdsec/simulation.yaml:/etc/crowdsec/simulation.yaml:ro
+      - ./crowdsec/whitelists.yaml:/etc/crowdsec/parsers/s02-enrich/whitelists.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${HOST_AUTH_LOG_PATH}:/var/log/host/sshd.log:ro
+      - nextcloud:/var/www/html:ro
+    networks:
+      - proxy-tier
+    depends_on:
+      - proxy
+      - ntfy
+
 volumes:
   db:
   nextcloud:
@@ -233,6 +259,8 @@ volumes:
   vaultwarden:
   ntfy_cache:
   ntfy_config:
+  crowdsec_data:
+  crowdsec_config:
 
 networks:
   proxy-tier:

@@ -31,6 +31,19 @@ To receive notifications on your mobile device, install the `ntfy` app:
 
 Once installed, add your self-hosted server in the app settings to start receiving notifications from your stack.
 
+## CrowdSec (Intrusion Detection)
+[CrowdSec](https://www.crowdsec.net/) is an open-source, collaborative security engine integrated into the stack to monitor, detect, and notify about suspicious activity across services.
+
+### Monitored Surfaces:
+- **Nginx Reverse Proxy**: Ingests HTTP traffic directly from the Docker socket to detect web scans, CVE exploit attempts, and malicious crawler behaviors.
+- **Host SSH**: Ingests host authentication logs (via `${HOST_AUTH_LOG_PATH}`) to detect SSH brute-force attempts.
+- **Nextcloud Application**: Parses `nextcloud.log` from the data volume to detect in-app login brute-force and credential spraying.
+
+### Intent & Simulation Mode:
+- **Observability First**: The stack is pre-configured in **Simulation Mode** (`crowdsec/simulation.yaml`). CrowdSec identifies suspicious activities, parses attacks, and triggers alerts without actively banning or dropping connections. This allows reviewing alert accuracy for several days to avoid accidental lockouts.
+- **ntfy Alerting**: Real-time alert notifications are pushed directly to your authenticated `ntfy` instance using `${NTFY_TOKEN}` and `${NTFY_TOPIC}`.
+- **Automated Blocking**: Once you've confirmed normal traffic patterns, simulation mode can be disabled or remediation bouncers attached to actively block malicious IPs.
+
 # Usage
 
 ## 1. Secret Management (Vaultwarden)
@@ -53,6 +66,7 @@ NTFY_PREFIX=...
 NTFY_TOPIC=...
 NTFY_TOKEN=...
 APPAPI_SHARED_KEY=...
+HOST_AUTH_LOG_PATH=... # e.g. /var/log/auth.log or /var/log/secure depending on host
 
 # rclone config
 RCLONE_CONFIG_NEXTCLOUD_TYPE=...

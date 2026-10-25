@@ -1,0 +1,19 @@
+# Log acquisition configuration for CrowdSec
+# 1. Nginx Proxy (streamed directly from Docker engine via socket)
+source: docker
+container_name:
+  - proxy
+labels:
+  type: nginx
+---
+# 2. Host SSH authentication logs
+filenames:
+  - /var/log/host/sshd.log
+labels:
+  type: syslog
+---
+# 3. Nextcloud application audit log
+filenames:
+  - /var/www/html/data/nextcloud.log
+labels:
+  type: Nextcloud

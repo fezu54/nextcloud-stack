@@ -27,6 +27,7 @@ REQUIRED_VARS=(
     "FRESH_RSS_PREFIX"
     "FRESH_RSS_DB_PASSWORD"
     "APPAPI_SHARED_KEY"
+    "HOST_AUTH_LOG_PATH"
 )
 
 # Function to check local dependencies
@@ -111,8 +112,41 @@ if [ "$NEW_DEPLOYMENT" = true ]; then
     chmod 600 "$BOOTSTRAP_FILE"
 
     for var in "${REQUIRED_VARS[@]}"; do
-        read -rsp "Enter value for $var: " val
-        echo " (captured)"
+        if [ "$var" = "HOST_AUTH_LOG_PATH" ]; then
+            echo ""
+            echo "⚙️  Configuring Host SSH log path for CrowdSec..."
+            detected_path=""
+            if [ -n "$REMOTE_USER" ] && [ -n "$REMOTE_HOST" ]; then
+                if ssh -o BatchMode=yes -o ConnectTimeout=5 "$REMOTE_USER@$REMOTE_HOST" "[ -f /var/log/auth.log ]" 2>/dev/null; then
+                    detected_path="/var/log/auth.log"
+                elif ssh -o BatchMode=yes -o ConnectTimeout=5 "$REMOTE_USER@$REMOTE_HOST" "[ -f /var/log/secure ]" 2>/dev/null; then
+                    detected_path="/var/log/secure"
+                fi
+            fi
+
+            default_choice="1"
+            [ "$detected_path" = "/var/log/secure" ] && default_choice="2"
+
+            echo "Select Host OS for SSH intrusion detection:"
+            echo "  1) Debian / Ubuntu (/var/log/auth.log)"
+            echo "  2) RHEL / CentOS / Rocky / Fedora (/var/log/secure)"
+            echo "  3) Custom path"
+            if [ -n "$detected_path" ]; then
+                echo "  💡 Auto-detected on $REMOTE_HOST: $detected_path"
+            fi
+
+            read -rp "Enter choice [1-3] (default: $default_choice): " os_choice
+            os_choice="${os_choice:-$default_choice}"
+            case "$os_choice" in
+                2) val="/var/log/secure" ;;
+                3) read -rp "Enter full path to host auth log: " val ;;
+                *) val="/var/log/auth.log" ;;
+            esac
+            echo "Setting HOST_AUTH_LOG_PATH=$val"
+        else
+            read -rsp "Enter value for $var: " val
+            echo " (captured)"
+        fi
         VAULT_SECRETS="$VAULT_SECRETS $var='$val'"
         echo "$var=$val" >> "$BOOTSTRAP_FILE"
     done
