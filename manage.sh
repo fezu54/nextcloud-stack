@@ -64,6 +64,7 @@ usage() {
     echo "  ps             Show running containers"
     echo "  stop/down      Stop or remove the stack"
     echo "  exec [svc]     Execute command in service (e.g., manage.sh exec db mysql)"
+    echo "  mute [scenario] Mute noisy scenario alerts (suppresses ntfy notifications)"
     echo ""
     echo "Example (Deploy):"
     echo "  $0 -u john -h 1.2.3.4 -p ~/stack -i .env deploy"
@@ -83,7 +84,7 @@ while [[ $# -gt 0 ]]; do
         --folder)    VAULT_FOLDER="$2";  shift 2 ;;
         -n|--new)    NEW_DEPLOYMENT=true; shift 1 ;;
         --help)      usage ;;
-        deploy|logs|ps|stop|down|exec) COMMAND="$1"; shift; break ;;
+        deploy|logs|ps|stop|down|exec|mute) COMMAND="$1"; shift; break ;;
         *)           echo "Unknown option/command: $1"; usage ;;
     esac
 done
@@ -185,6 +186,7 @@ case $COMMAND in
             --exclude='deploy.sh' \
             --exclude='manage.sh' \
             --exclude='logs.sh' \
+            --exclude='mute.sh' \
             ./ "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/"
 
         REMOTE_CMD="cd $REMOTE_PATH && \
@@ -200,6 +202,135 @@ case $COMMAND in
         echo "Streaming logs from $REMOTE_HOST..."
         REMOTE_CMD="cd $REMOTE_PATH && $VAULT_SECRETS docker compose logs $EXTRA_ARGS"
         ssh -t "$REMOTE_USER@$REMOTE_HOST" "$REMOTE_CMD"
+        ;;
+
+    mute)
+        MUTED_FILE="crowdsec/muted_scenarios.txt"
+        SCENARIO="$EXTRA_ARGS"
+
+        # If no scenario argument was provided, offer interactive selection
+        if [ -z "$SCENARIO" ]; then
+            echo "🔍 Fetching recent alert scenarios from $REMOTE_HOST..."
+            RECENT_ALERTS=$(ssh "$REMOTE_USER@$REMOTE_HOST" "cd $REMOTE_PATH && $VAULT_SECRETS docker compose exec -T crowdsec cscli alerts list -l 10 -o raw" 2>/dev/null | awk -F',' 'NR>1 {print $4}' | grep -v '^$' | sort -u)
+
+            if [ -n "$RECENT_ALERTS" ]; then
+                echo ""
+                echo "Recently triggered scenarios:"
+                scenarios=()
+                idx=1
+                while IFS= read -r sc; do
+                    [ -z "$sc" ] && continue
+                    echo "  $idx) $sc"
+                    scenarios+=("$sc")
+                    ((idx++))
+                done <<< "$RECENT_ALERTS"
+                echo "  $idx) Custom (enter scenario name manually)"
+                
+                read -rp "Select scenario to mute [1-$idx]: " choice
+                if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -lt "$idx" ]; then
+                    SCENARIO="${scenarios[$((choice-1))]}"
+                else
+                    read -rp "Enter scenario name to mute (e.g., crowdsecurity/http-wordpress-scan): " SCENARIO
+                fi
+            else
+                read -rp "Enter scenario name to mute (e.g., crowdsecurity/http-wordpress-scan): " SCENARIO
+            fi
+        fi
+
+        SCENARIO=$(echo "$SCENARIO" | xargs)
+        if [ -z "$SCENARIO" ]; then
+            echo "❌ No scenario specified. Aborted."
+            exit 1
+        fi
+
+        # Check if already in muted_scenarios.txt
+        mkdir -p crowdsec
+        touch "$MUTED_FILE"
+        if grep -Fxq "$SCENARIO" "$MUTED_FILE"; then
+            echo "ℹ️  '$SCENARIO' is already present in $MUTED_FILE."
+        else
+            echo "$SCENARIO" >> "$MUTED_FILE"
+            echo "✅ Added '$SCENARIO' to local $MUTED_FILE."
+        fi
+
+        # Sync muted_scenarios.txt to remote server
+        echo "📤 Syncing $MUTED_FILE to $REMOTE_HOST:$REMOTE_PATH/$MUTED_FILE..."
+        rsync -avz "$MUTED_FILE" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/$MUTED_FILE"
+
+        # Restart crowdsec container on remote server to reload configuration instantly
+        echo "🔄 Reloading CrowdSec on $REMOTE_HOST..."
+        ssh -t "$REMOTE_USER@$REMOTE_HOST" "cd $REMOTE_PATH && $VAULT_SECRETS docker compose restart crowdsec"
+
+        echo "🎉 Done! Alerts for '$SCENARIO' are now muted."
+        echo "   (Traffic matching this scenario will still be banned silently by the firewall bouncer)."
+
+        # Ask if the user wants to contribute the muted scenario back to upstream
+        echo ""
+        read -rp "Would you like to contribute this muted scenario back to upstream via a Pull Request? [y/N]: " contribute_choice
+        case "$contribute_choice" in
+            [yY]|[yY][eE][sS])
+                echo ""
+                echo "🚀 Preparing Pull Request..."
+
+                # 1. Check if git repo
+                if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+                    echo "❌ Not inside a git repository. Cannot create a Pull Request."
+                    exit 0
+                fi
+
+                # 2. Check if GitHub CLI is installed
+                if ! command -v gh >/dev/null 2>&1; then
+                    echo "⚠️  GitHub CLI ('gh') is required to automatically open a Pull Request."
+                    echo "   Install it from https://cli.github.com/ or submit a PR manually."
+                    exit 0
+                fi
+
+                # 3. Check if user is authenticated with gh
+                if ! gh auth status >/dev/null 2>&1; then
+                    echo "⚠️  You are not logged into GitHub CLI."
+                    echo "   Please run 'gh auth login' to authenticate, then re-run to create a PR."
+                    exit 0
+                fi
+
+                ORIGINAL_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+                BRANCH_SLUG=$(echo "$SCENARIO" | tr '/' '-' | tr -cd '[:alnum:]-_')
+                PR_BRANCH="mute/${BRANCH_SLUG}"
+
+                echo "🌿 Creating branch '$PR_BRANCH'..."
+                git checkout -B "$PR_BRANCH"
+
+                git add "$MUTED_FILE"
+                git commit -m "feat(crowdsec): mute noisy scenario $SCENARIO"
+
+                echo "📤 Pushing branch and creating Pull Request on fezu54/nextcloud-stack..."
+                PR_TITLE="feat(crowdsec): mute $SCENARIO"
+                PR_BODY="This PR adds \`$SCENARIO\` to \`crowdsec/muted_scenarios.txt\`.
+
+### Why?
+This scenario generates noisy notifications for attacks that this Nextcloud stack is not vulnerable to. Adding it to \`muted_scenarios.txt\` ensures attackers are still actively banned by the firewall bouncer, but suppresses spammy ntfy push notifications.
+
+*Submitted automatically via \`./mute.sh\`.*"
+
+                # Try creating PR with 'crowdsec' label; if label does not exist, fall back to without label
+                if PR_URL=$(gh pr create --repo fezu54/nextcloud-stack --title "$PR_TITLE" --body "$PR_BODY" --label "crowdsec" 2>/dev/null); then
+                    echo "✅ Pull Request created with label 'crowdsec'!"
+                    echo "   🔗 $PR_URL"
+                elif PR_URL=$(gh pr create --repo fezu54/nextcloud-stack --title "$PR_TITLE" --body "$PR_BODY" 2>/dev/null); then
+                    echo "✅ Pull Request created successfully!"
+                    echo "   🔗 $PR_URL"
+                else
+                    echo "❌ Failed to create Pull Request via gh CLI."
+                    echo "   You can push branch '$PR_BRANCH' and create the PR manually on GitHub."
+                fi
+
+                # Switch back to the original branch and merge the commit locally
+                git checkout "$ORIGINAL_BRANCH" >/dev/null 2>&1
+                git merge "$PR_BRANCH" --ff-only >/dev/null 2>&1
+                ;;
+            *)
+                echo "No PR requested. Exiting."
+                ;;
+        esac
         ;;
 
     ps|stop|down|exec)

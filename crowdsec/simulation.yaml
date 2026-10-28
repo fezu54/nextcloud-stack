@@ -1,3 +1,2 @@
-# Global simulation mode: all scenarios generate alerts & notifications,
-# but bouncers/remediations are NOT actively enforced.
-simulation: true
+# Global simulation mode disabled: active bans will now be enforced by bouncers.
+simulation: false

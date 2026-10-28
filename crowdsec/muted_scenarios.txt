@@ -1,0 +1,11 @@
+crowdsecurity/http-open-proxy
+crowdsecurity/CVE-2022-41082
+crowdsecurity/http-crawl-non_statics
+crowdsecurity/http-probing
+crowdsecurity/http-admin-interface-probing
+crowdsecurity/http-sensitive-files
+crowdsecurity/http-wordpress-scan
+crowdsecurity/thinkphp-cve-2018-20062
+crowdsecurity/CVE-2017-9841
+crowdsecurity/http-cve-2021-42013
+crowdsecurity/http-cve-2021-41773

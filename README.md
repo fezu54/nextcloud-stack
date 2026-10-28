@@ -44,6 +44,20 @@ Once installed, add your self-hosted server in the app settings to start receivi
 - **ntfy Alerting**: Real-time alert notifications are pushed directly to your authenticated `ntfy` instance using `${NTFY_TOKEN}` and `${NTFY_TOPIC}`.
 - **Automated Blocking**: Once you've confirmed normal traffic patterns, simulation mode can be disabled or remediation bouncers attached to actively block malicious IPs.
 
+### Muting Noisy Alerts (`mute.sh`):
+To prevent alert fatigue from scanners testing vulnerabilities your stack isn't vulnerable to (e.g. WordPress probes), use `mute.sh`:
+```bash
+./mute.sh \
+  --user your_ssh_user \
+  --host your_server_ip \
+  --path ~/nextcloud-stack \
+  --item .env \
+  --folder "Nextcloud stack"
+```
+The script will fetch recent alerts from the server, let you select which scenario to silence, sync `crowdsec/muted_scenarios.txt`, and reload CrowdSec instantly—**without redeploying or rebuilding the stack**. Muted scenarios are still actively banned by the firewall bouncer, but will no longer send push notifications.
+
+Optionally, `mute.sh` can automatically open a Pull Request (via GitHub CLI `gh`) labeled `crowdsec` against upstream to contribute common noise scenarios back to the repository.
+
 # Usage
 
 ## 1. Secret Management (Vaultwarden)

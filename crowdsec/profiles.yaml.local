@@ -1,4 +1,16 @@
-# Custom profile override directing alerts to ntfy
+# 1. Silent Bans: Block the attacker, but suppress noisy ntfy push notifications
+# for scenarios listed in muted_scenarios.txt.
+name: silent_bans
+filters:
+  - Alert.Remediation == true && Alert.GetScope() == "Ip" && Alert.GetScenario() in File('muted_scenarios.txt')
+decisions:
+  - type: ban
+    duration: 4h
+# No notifications list -> silences alerts for these scenarios
+on_success: break
+---
+# 2. High-Priority & Unmuted Alerts: Ban the attacker AND send real-time push notification
+# for SSH brute-force, Nextcloud account attacks, or new/unfiltered CVE exploits.
 name: default_ip_remediation
 filters:
   - Alert.Remediation == true && Alert.GetScope() == "Ip"
