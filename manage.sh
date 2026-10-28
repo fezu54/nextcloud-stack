@@ -303,7 +303,7 @@ case $COMMAND in
                     exit 0
                 fi
 
-                ORIGINAL_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+                ORIGINAL_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "feat/vaultwarden")
                 BRANCH_SLUG=$(echo "$SCENARIO" | tr '/' '-' | tr -cd '[:alnum:]-_')
                 PR_BRANCH="mute/${BRANCH_SLUG}"
 
@@ -331,10 +331,10 @@ This scenario generates noisy notifications for attacks that this Nextcloud stac
 *Submitted automatically via \`./mute.sh\`.*"
 
                 # Try creating PR with 'crowdsec' label; if label fails, create without label
-                if PR_URL=$(gh pr create --repo fezu54/nextcloud-stack --title "$PR_TITLE" --body "$PR_BODY" --label "crowdsec" 2>/dev/null); then
+                if PR_URL=$(gh pr create --repo fezu54/nextcloud-stack --base "$ORIGINAL_BRANCH" --title "$PR_TITLE" --body "$PR_BODY" --label "crowdsec" 2>/dev/null); then
                     echo "✅ Pull Request created with label 'crowdsec'!"
                     echo "   🔗 $PR_URL"
-                elif PR_URL=$(gh pr create --repo fezu54/nextcloud-stack --title "$PR_TITLE" --body "$PR_BODY"); then
+                elif PR_URL=$(gh pr create --repo fezu54/nextcloud-stack --base "$ORIGINAL_BRANCH" --title "$PR_TITLE" --body "$PR_BODY"); then
                     echo "✅ Pull Request created successfully!"
                     echo "   🔗 $PR_URL"
                 else
@@ -342,9 +342,11 @@ This scenario generates noisy notifications for attacks that this Nextcloud stac
                     echo "   You can create the PR manually on GitHub."
                 fi
 
-                # Switch back to the original branch and merge the commit locally
+                # Switch back to the original branch without merging locally to prevent divergence with GitHub's squash merge
                 git checkout "$ORIGINAL_BRANCH" >/dev/null 2>&1
-                git merge "$PR_BRANCH" --ff-only >/dev/null 2>&1
+                echo ""
+                echo "✅ Switched back to '$ORIGINAL_BRANCH'."
+                echo "   💡 Once the PR is merged on GitHub, run 'git pull' to update your local branch."
                 ;;
             *)
                 echo "No PR requested. Exiting."
