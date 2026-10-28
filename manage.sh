@@ -207,23 +207,33 @@ case $COMMAND in
     mute)
         MUTED_FILE="crowdsec/muted_scenarios.txt"
         SCENARIO="$EXTRA_ARGS"
+        mkdir -p crowdsec
+        touch "$MUTED_FILE"
 
         # If no scenario argument was provided, offer interactive selection
         if [ -z "$SCENARIO" ]; then
             echo "🔍 Fetching recent alert scenarios from $REMOTE_HOST..."
-            RECENT_ALERTS=$(ssh "$REMOTE_USER@$REMOTE_HOST" "cd $REMOTE_PATH && $VAULT_SECRETS docker compose exec -T crowdsec cscli alerts list -l 10 -o raw" 2>/dev/null | awk -F',' 'NR>1 {print $4}' | grep -v '^$' | sort -u)
+            RECENT_ALERTS=$(ssh "$REMOTE_USER@$REMOTE_HOST" "cd $REMOTE_PATH && $VAULT_SECRETS docker compose exec -T crowdsec cscli alerts list -l 20 -o raw" 2>/dev/null | awk -F',' 'NR>1 {print $4}' | grep -v '^$' | sort -u)
 
+            scenarios=()
             if [ -n "$RECENT_ALERTS" ]; then
-                echo ""
-                echo "Recently triggered scenarios:"
-                scenarios=()
-                idx=1
                 while IFS= read -r sc; do
                     [ -z "$sc" ] && continue
-                    echo "  $idx) $sc"
-                    scenarios+=("$sc")
-                    ((idx++))
+                    # Filter out scenarios that are already muted
+                    if ! grep -Fxq "$sc" "$MUTED_FILE" 2>/dev/null; then
+                        scenarios+=("$sc")
+                    fi
                 done <<< "$RECENT_ALERTS"
+            fi
+
+            if [ "${#scenarios[@]}" -gt 0 ]; then
+                echo ""
+                echo "Recently triggered scenarios (not yet muted):"
+                idx=1
+                for sc in "${scenarios[@]}"; do
+                    echo "  $idx) $sc"
+                    ((idx++))
+                done
                 echo "  $idx) Custom (enter scenario name manually)"
                 
                 read -rp "Select scenario to mute [1-$idx]: " choice
@@ -233,25 +243,26 @@ case $COMMAND in
                     read -rp "Enter scenario name to mute (e.g., crowdsecurity/http-wordpress-scan): " SCENARIO
                 fi
             else
-                read -rp "Enter scenario name to mute (e.g., crowdsecurity/http-wordpress-scan): " SCENARIO
+                echo ""
+                echo "ℹ️  All recent alerts are already in your muted scenarios list!"
+                read -rp "Enter custom scenario name to mute (or press Enter to cancel): " SCENARIO
             fi
         fi
 
         SCENARIO=$(echo "$SCENARIO" | xargs)
         if [ -z "$SCENARIO" ]; then
-            echo "❌ No scenario specified. Aborted."
-            exit 1
+            echo "No scenario specified. Exiting."
+            exit 0
         fi
 
         # Check if already in muted_scenarios.txt
-        mkdir -p crowdsec
-        touch "$MUTED_FILE"
         if grep -Fxq "$SCENARIO" "$MUTED_FILE"; then
-            echo "ℹ️  '$SCENARIO' is already present in $MUTED_FILE."
-        else
-            echo "$SCENARIO" >> "$MUTED_FILE"
-            echo "✅ Added '$SCENARIO' to local $MUTED_FILE."
+            echo "ℹ️  '$SCENARIO' is already present in $MUTED_FILE. Nothing to do."
+            exit 0
         fi
+
+        echo "$SCENARIO" >> "$MUTED_FILE"
+        echo "✅ Added '$SCENARIO' to local $MUTED_FILE."
 
         # Sync muted_scenarios.txt to remote server
         echo "📤 Syncing $MUTED_FILE to $REMOTE_HOST:$REMOTE_PATH/$MUTED_FILE..."
@@ -302,7 +313,15 @@ case $COMMAND in
                 git add "$MUTED_FILE"
                 git commit -m "feat(crowdsec): mute noisy scenario $SCENARIO"
 
-                echo "📤 Pushing branch and creating Pull Request on fezu54/nextcloud-stack..."
+                echo "📤 Pushing branch to remote..."
+                # Try pushing to origin; if user has no push access, set up fork via gh
+                if ! git push -u origin "$PR_BRANCH" 2>/dev/null; then
+                    echo "🍴 Setting up fork via GitHub CLI..."
+                    gh repo fork fezu54/nextcloud-stack --remote --remote-name "fork" 2>/dev/null || true
+                    git push -u fork "$PR_BRANCH"
+                fi
+
+                echo "📤 Creating Pull Request on fezu54/nextcloud-stack..."
                 PR_TITLE="feat(crowdsec): mute $SCENARIO"
                 PR_BODY="This PR adds \`$SCENARIO\` to \`crowdsec/muted_scenarios.txt\`.
 
@@ -311,16 +330,16 @@ This scenario generates noisy notifications for attacks that this Nextcloud stac
 
 *Submitted automatically via \`./mute.sh\`.*"
 
-                # Try creating PR with 'crowdsec' label; if label does not exist, fall back to without label
+                # Try creating PR with 'crowdsec' label; if label fails, create without label
                 if PR_URL=$(gh pr create --repo fezu54/nextcloud-stack --title "$PR_TITLE" --body "$PR_BODY" --label "crowdsec" 2>/dev/null); then
                     echo "✅ Pull Request created with label 'crowdsec'!"
                     echo "   🔗 $PR_URL"
-                elif PR_URL=$(gh pr create --repo fezu54/nextcloud-stack --title "$PR_TITLE" --body "$PR_BODY" 2>/dev/null); then
+                elif PR_URL=$(gh pr create --repo fezu54/nextcloud-stack --title "$PR_TITLE" --body "$PR_BODY"); then
                     echo "✅ Pull Request created successfully!"
                     echo "   🔗 $PR_URL"
                 else
                     echo "❌ Failed to create Pull Request via gh CLI."
-                    echo "   You can push branch '$PR_BRANCH' and create the PR manually on GitHub."
+                    echo "   You can create the PR manually on GitHub."
                 fi
 
                 # Switch back to the original branch and merge the commit locally
