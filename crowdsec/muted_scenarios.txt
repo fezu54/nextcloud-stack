@@ -10,3 +10,4 @@ crowdsecurity/CVE-2017-9841
 crowdsecurity/http-cve-2021-42013
 crowdsecurity/http-cve-2021-41773
 crowdsecurity/CVE-2019-18935
+crowdsecurity/http-bad-user-agent
