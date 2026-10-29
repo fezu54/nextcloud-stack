@@ -205,10 +205,13 @@ case $COMMAND in
         ;;
 
     mute)
-        MUTED_FILE="crowdsec/muted_scenarios.txt"
+        PROFILES_FILE="crowdsec/profiles.yaml.local"
         SCENARIO="$EXTRA_ARGS"
-        mkdir -p crowdsec
-        touch "$MUTED_FILE"
+
+        if [ ! -f "$PROFILES_FILE" ]; then
+            echo "❌ Error: $PROFILES_FILE does not exist."
+            exit 1
+        fi
 
         # If no scenario argument was provided, offer interactive selection
         if [ -z "$SCENARIO" ]; then
@@ -220,7 +223,7 @@ case $COMMAND in
                 while IFS= read -r sc; do
                     [ -z "$sc" ] && continue
                     # Filter out scenarios that are already muted
-                    if ! grep -Fxq "$sc" "$MUTED_FILE" 2>/dev/null; then
+                    if ! grep -Fq "\"$sc\"" "$PROFILES_FILE" 2>/dev/null; then
                         scenarios+=("$sc")
                     fi
                 done <<< "$RECENT_ALERTS"
@@ -255,18 +258,18 @@ case $COMMAND in
             exit 0
         fi
 
-        # Check if already in muted_scenarios.txt
-        if grep -Fxq "$SCENARIO" "$MUTED_FILE"; then
-            echo "ℹ️  '$SCENARIO' is already present in $MUTED_FILE. Nothing to do."
+        # Check if already in profiles.yaml.local
+        if grep -Fq "\"$SCENARIO\"" "$PROFILES_FILE"; then
+            echo "ℹ️  '$SCENARIO' is already present in $PROFILES_FILE. Nothing to do."
             exit 0
         fi
 
-        echo "$SCENARIO" >> "$MUTED_FILE"
-        echo "✅ Added '$SCENARIO' to local $MUTED_FILE."
+        sed -i "/^[[:space:]]*\]/i \      \"$SCENARIO\"," "$PROFILES_FILE"
+        echo "✅ Added '$SCENARIO' to local $PROFILES_FILE."
 
-        # Sync muted_scenarios.txt to remote server
-        echo "📤 Syncing $MUTED_FILE to $REMOTE_HOST:$REMOTE_PATH/$MUTED_FILE..."
-        rsync -avz "$MUTED_FILE" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/$MUTED_FILE"
+        # Sync profiles.yaml.local to remote server
+        echo "📤 Syncing $PROFILES_FILE to $REMOTE_HOST:$REMOTE_PATH/$PROFILES_FILE..."
+        rsync -avz "$PROFILES_FILE" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/$PROFILES_FILE"
 
         # Restart crowdsec container on remote server to reload configuration instantly
         echo "🔄 Reloading CrowdSec on $REMOTE_HOST..."
@@ -310,7 +313,7 @@ case $COMMAND in
                 echo "🌿 Creating branch '$PR_BRANCH'..."
                 git checkout -B "$PR_BRANCH"
 
-                git add "$MUTED_FILE"
+                git add "$PROFILES_FILE"
                 git commit -m "feat(crowdsec): mute noisy scenario $SCENARIO"
 
                 echo "📤 Pushing branch to remote..."
@@ -323,10 +326,10 @@ case $COMMAND in
 
                 echo "📤 Creating Pull Request on fezu54/nextcloud-stack..."
                 PR_TITLE="feat(crowdsec): mute $SCENARIO"
-                PR_BODY="This PR adds \`$SCENARIO\` to \`crowdsec/muted_scenarios.txt\`.
+                PR_BODY="This PR adds \`$SCENARIO\` to \`crowdsec/profiles.yaml.local\`.
 
 ### Why?
-This scenario generates noisy notifications for attacks that this Nextcloud stack is not vulnerable to. Adding it to \`muted_scenarios.txt\` ensures attackers are still actively banned by the firewall bouncer, but suppresses spammy ntfy push notifications.
+This scenario generates noisy notifications for attacks that this Nextcloud stack is not vulnerable to. Adding it to \`profiles.yaml.local\` ensures attackers are still actively banned by the firewall bouncer, but suppresses spammy ntfy push notifications.
 
 *Submitted automatically via \`./mute.sh\`.*"
 

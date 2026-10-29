@@ -1,8 +1,22 @@
 # 1. Silent Bans: Block the attacker, but suppress noisy ntfy push notifications
-# for scenarios listed in muted_scenarios.txt.
+# for scenarios listed below.
 name: silent_bans
 filters:
-  - Alert.Remediation == true && Alert.GetScope() == "Ip" && Alert.GetScenario() in File('muted_scenarios.txt')
+  - >-
+    Alert.Remediation == true && Alert.GetScope() == "Ip" && Alert.GetScenario() in [
+      "crowdsecurity/http-open-proxy",
+      "crowdsecurity/CVE-2022-41082",
+      "crowdsecurity/http-crawl-non_statics",
+      "crowdsecurity/http-probing",
+      "crowdsecurity/http-admin-interface-probing",
+      "crowdsecurity/http-sensitive-files",
+      "crowdsecurity/http-wordpress-scan",
+      "crowdsecurity/thinkphp-cve-2018-20062",
+      "crowdsecurity/CVE-2017-9841",
+      "crowdsecurity/http-cve-2021-42013",
+      "crowdsecurity/http-cve-2021-41773",
+      "crowdsecurity/CVE-2019-18935",
+    ]
 decisions:
   - type: ban
     duration: 4h

@@ -54,7 +54,7 @@ To prevent alert fatigue from scanners testing vulnerabilities your stack isn't 
   --item .env \
   --folder "Nextcloud stack"
 ```
-The script will fetch recent alerts from the server, let you select which scenario to silence, sync `crowdsec/muted_scenarios.txt`, and reload CrowdSec instantly—**without redeploying or rebuilding the stack**. Muted scenarios are still actively banned by the firewall bouncer, but will no longer send push notifications.
+The script will fetch recent alerts from the server, let you select which scenario to silence, sync `crowdsec/profiles.yaml.local`, and reload CrowdSec instantly—**without redeploying or rebuilding the stack**. Muted scenarios are still actively banned by the firewall bouncer, but will no longer send push notifications.
 
 Optionally, `mute.sh` can automatically open a Pull Request (via GitHub CLI `gh`) labeled `crowdsec` against upstream to contribute common noise scenarios back to the repository.
 
