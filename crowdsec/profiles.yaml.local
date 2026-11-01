@@ -17,6 +17,7 @@ filters:
       "crowdsecurity/http-cve-2021-41773",
       "crowdsecurity/CVE-2019-18935",
       "crowdsecurity/http-bad-user-agent",
+      "crowdsecurity/http-backdoors-attempts",
     ]
 decisions:
   - type: ban
